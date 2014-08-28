@@ -268,7 +268,7 @@ class SerializationTests(unittest.TestCase):
 
         # Configure a custom serializer
         def datetime_serializer(obj, serialize_method, ignore_attribute,
-                                ignore):
+                                ignore, config):
             """
             Custom datetime serializer (returns an ISO date string)
             """
