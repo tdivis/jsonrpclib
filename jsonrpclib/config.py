@@ -32,6 +32,7 @@ import sys
 
 # ------------------------------------------------------------------------------
 
+
 class LocalClasses(dict):
     """
     Associates local classes with their names (used in the jsonclass module)
@@ -45,6 +46,7 @@ class LocalClasses(dict):
         self[cls.__name__] = cls
 
 # ------------------------------------------------------------------------------
+
 
 class Config(object):
     """
@@ -89,9 +91,9 @@ class Config(object):
 
         # Default user agent
         if user_agent is None:
-            user_agent = 'jsonrpclib/{0} (Python {1})' \
-                 .format(__version__,
-                         '.'.join(str(ver) for ver in sys.version_info[0:3]))
+            user_agent = 'jsonrpclib/{0} (Python {1})'.format(
+                __version__, '.'.join(str(ver)
+                                      for ver in sys.version_info[0:3]))
         self.user_agent = user_agent
 
         # The list of classes to use for jsonclass translation.

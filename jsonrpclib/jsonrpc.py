@@ -71,6 +71,7 @@ import uuid
 
 try:
     # Python 3
+    # pylint: disable=F0401,E0611
     from urllib.parse import splittype
     from urllib.parse import splithost
     from xmlrpc.client import Transport as XMLTransport
@@ -80,6 +81,7 @@ try:
 
 except ImportError:
     # Python 2
+    # pylint: disable=F0401,E0611
     from urllib import splittype
     from urllib import splithost
     from xmlrpclib import Transport as XMLTransport
@@ -94,6 +96,7 @@ except ImportError:
 from jsonrpclib import jsonclass
 
 try:
+    # pylint: disable=F0401,E0611
     # Using cjson
     import cjson
 
@@ -105,6 +108,7 @@ try:
         return cjson.decode(json_string)
 
 except ImportError:
+    # pylint: disable=F0401,E0611
     # Use json or simplejson
     try:
         import json
@@ -112,7 +116,7 @@ except ImportError:
         try:
             import simplejson as json
         except ImportError:
-            raise ImportError('You must have the cjson, json, or simplejson ' \
+            raise ImportError('You must have the cjson, json, or simplejson '
                               'module(s) available.')
 
     # Declare json methods
@@ -133,6 +137,7 @@ except ImportError:
 # ------------------------------------------------------------------------------
 # XMLRPClib re-implementations
 
+
 class ProtocolError(Exception):
     """
     JSON-RPC error
@@ -142,6 +147,7 @@ class ProtocolError(Exception):
     * a (code, message) tuple
     """
     pass
+
 
 class AppError(ProtocolError):
     """
@@ -247,6 +253,7 @@ class TransportMixIn(object):
         target = JSONTarget()
         return JSONParser(target), target
 
+
 class JSONParser(object):
     def __init__(self, target):
         self.target = target
@@ -256,6 +263,7 @@ class JSONParser(object):
 
     def close(self):
         pass
+
 
 class JSONTarget(object):
     def __init__(self):
@@ -280,13 +288,16 @@ class JSONTarget(object):
 
             return data
 
+
 class Transport(TransportMixIn, XMLTransport):
     pass
+
 
 class SafeTransport(TransportMixIn, XMLSafeTransport):
     pass
 
 # ------------------------------------------------------------------------------
+
 
 class ServerProxy(XMLServerProxy):
     """
@@ -431,6 +442,7 @@ class ServerProxy(XMLServerProxy):
 
 # ------------------------------------------------------------------------------
 
+
 class _Method(XML_Method):
 
     def __call__(self, *args, **kwargs):
@@ -452,6 +464,7 @@ class _Method(XML_Method):
         # The only thing that changes is the name.
         # return _Method(self.__send, "{0}.{1}".format(self.__name, name))
 
+
 class _Notify(object):
     def __init__(self, request):
         self._request = request
@@ -461,6 +474,7 @@ class _Notify(object):
 
 # ------------------------------------------------------------------------------
 # Batch implementation
+
 
 class MultiCallMethod(object):
 
@@ -492,6 +506,7 @@ class MultiCallMethod(object):
         self.method = new_method
         return self
 
+
 class MultiCallNotify(object):
 
     def __init__(self, multicall, config=jsonrpclib.config.DEFAULT):
@@ -502,6 +517,7 @@ class MultiCallNotify(object):
         new_job = MultiCallMethod(name, notify=True, config=self._config)
         self.multicall._job_list.append(new_job)
         return new_job
+
 
 class MultiCallIterator(object):
 
@@ -520,6 +536,7 @@ class MultiCallIterator(object):
 
     def __len__(self):
         return len(self.results)
+
 
 class MultiCall(object):
 
@@ -556,6 +573,7 @@ class MultiCall(object):
 Server = ServerProxy
 
 # ------------------------------------------------------------------------------
+
 
 class Fault(object):
     """
@@ -721,6 +739,7 @@ class Payload(object):
 
 # ------------------------------------------------------------------------------
 
+
 def dump(params=None, methodname=None, rpcid=None, version=None,
          is_response=None, is_notify=None, config=jsonrpclib.config.DEFAULT):
     """
@@ -745,7 +764,7 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
     # Validate method name and parameters
     valid_params = (utils.TupleType, utils.ListType, utils.DictType, Fault)
     if methodname in utils.StringTypes and \
-    not isinstance(params, valid_params):
+            not isinstance(params, valid_params):
         """
         If a method, and params are not in a listish or a Fault,
         error out.
@@ -758,11 +777,12 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
 
     if isinstance(params, Fault):
         # Prepare an error dictionary
+        # pylint: disable=E1103
         return payload.error(params.faultCode, params.faultString)
 
     if type(methodname) not in utils.StringTypes and not is_response:
         # Neither a request nor a response
-        raise ValueError('Method name must be a string, or is_response ' \
+        raise ValueError('Method name must be a string, or is_response '
                          'must be set to True.')
 
     if config.use_jsonclass:
@@ -854,6 +874,7 @@ def loads(data, config=jsonrpclib.config.DEFAULT):
     return load(result, config)
 
 # ------------------------------------------------------------------------------
+
 
 def check_for_errors(result):
     """

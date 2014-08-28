@@ -40,12 +40,13 @@ import re
 
 # Supported transmitted code
 SUPPORTED_TYPES = (utils.DictType,) + utils.iterable_types \
-                  + utils.primitive_types
+    + utils.primitive_types
 
 # Regex of invalid module characters
 INVALID_MODULE_CHARS = r'[^a-zA-Z0-9\_\.]'
 
 # ------------------------------------------------------------------------------
+
 
 class TranslationError(Exception):
     """
@@ -53,7 +54,6 @@ class TranslationError(Exception):
     """
     pass
 
-# ------------------------------------------------------------------------------
 
 def _slots_finder(clazz, fields_set):
     """
@@ -185,6 +185,7 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
 
 # ------------------------------------------------------------------------------
 
+
 def load(obj, classes=None):
     """
     If 'obj' is a dictionary containing a __jsonclass__ entry, converts the
@@ -217,7 +218,7 @@ def load(obj, classes=None):
 
     json_module_clean = re.sub(INVALID_MODULE_CHARS, '', orig_module_name)
     if json_module_clean != orig_module_name:
-        raise TranslationError('Module name {0} has invalid characters.' \
+        raise TranslationError('Module name {0} has invalid characters.'
                                .format(orig_module_name))
 
     # Load the class
@@ -228,7 +229,7 @@ def load(obj, classes=None):
         try:
             json_class = classes[json_module_parts[0]]
         except KeyError:
-            raise TranslationError('Unknown class or module {0}.' \
+            raise TranslationError('Unknown class or module {0}.'
                                    .format(json_module_parts[0]))
 
     else:
@@ -240,14 +241,13 @@ def load(obj, classes=None):
             temp_module = __import__(json_module_tree,
                                      fromlist=[json_class_name])
         except ImportError:
-            raise TranslationError('Could not import {0} from module {1}.' \
+            raise TranslationError('Could not import {0} from module {1}.'
                                    .format(json_class_name, json_module_tree))
 
         try:
             json_class = getattr(temp_module, json_class_name)
-
         except AttributeError:
-            raise TranslationError("Unknown class {0}.{1}." \
+            raise TranslationError("Unknown class {0}.{1}."
                                    .format(json_module_tree, json_class_name))
 
     # Create the object
@@ -255,17 +255,15 @@ def load(obj, classes=None):
     if isinstance(params, utils.ListType):
         try:
             new_obj = json_class(*params)
-
         except TypeError as ex:
-            raise TranslationError("Error instantiating {0}: {1}"\
+            raise TranslationError("Error instantiating {0}: {1}"
                                    .format(json_class.__name__, ex))
 
     elif isinstance(params, utils.DictType):
         try:
             new_obj = json_class(**params)
-
         except TypeError as ex:
-            raise TranslationError("Error instantiating {0}: {1}"\
+            raise TranslationError("Error instantiating {0}: {1}"
                                    .format(json_class.__name__, ex))
 
     else:
