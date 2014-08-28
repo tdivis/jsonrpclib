@@ -119,7 +119,8 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
     # (reminder: config.serialize_handlers is a dict)
     if isinstance(obj, tuple(config.serialize_handlers)):
         return config.serialize_handlers[type(obj)](obj, serialize_method,
-                                                    ignore_attribute, ignore)
+                                                    ignore_attribute, ignore,
+                                                    config)
 
     # Primitive
     elif isinstance(obj, utils.primitive_types):
