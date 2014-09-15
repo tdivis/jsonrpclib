@@ -891,7 +891,7 @@ def check_for_errors(result):
         # Notification
         return result
 
-    if type(result) is not utils.DictType:
+    if not isinstance(result, utils.DictType):
         # Invalid argument
         raise TypeError('Response is not a dict.')
 
@@ -941,13 +941,13 @@ def check_for_errors(result):
 
 
 def isbatch(result):
-    if type(result) not in (utils.ListType, utils.TupleType):
+    if not isinstance(result, (utils.ListType, utils.TupleType)):
         return False
-    if len(result) < 1:
+    elif len(result) < 1:
         return False
-    if type(result[0]) is not utils.DictType:
+    elif not isinstance(result[0], utils.DictType):
         return False
-    if 'jsonrpc' not in result[0].keys():
+    elif 'jsonrpc' not in result[0].keys():
         return False
     try:
         version = float(result[0]['jsonrpc'])
