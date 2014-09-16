@@ -758,11 +758,14 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
     if not version:
         version = config.version
 
-    if params is None:
+    if not is_response and params is None:
         params = []
 
     # Validate method name and parameters
-    valid_params = (utils.TupleType, utils.ListType, utils.DictType, Fault)
+    valid_params = [utils.TupleType, utils.ListType, utils.DictType, Fault]
+    if is_response:
+        valid_params.append(type(None))
+
     if methodname in utils.StringTypes and \
             not isinstance(params, valid_params):
         """
