@@ -117,13 +117,18 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
     # Parse / return default "types"...
     # Apply additional types, override built-in types
     # (reminder: config.serialize_handlers is a dict)
-    if isinstance(obj, tuple(config.serialize_handlers)):
-        return config.serialize_handlers[type(obj)](obj, serialize_method,
-                                                    ignore_attribute, ignore,
-                                                    config)
+    try:
+        serializer = config.serialize_handlers[type(obj)]
+    except KeyError:
+        # Not a serializer
+        pass
+    else:
+        if serializer is not None:
+            return serializer(obj, serialize_method, ignore_attribute,
+                              ignore, config)
 
     # Primitive
-    elif isinstance(obj, utils.primitive_types):
+    if isinstance(obj, utils.primitive_types):
         return obj
 
     # Iterative
