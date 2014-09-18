@@ -48,7 +48,7 @@ appropriately.
 See https://github.com/tcalmant/jsonrpclib for more info.
 
 :license: Apache License 2.0
-:version: 0.1.9
+:version: 0.2.1
 """
 
 # Module version
@@ -102,9 +102,16 @@ try:
 
     # Declare cjson methods
     def jdumps(obj, encoding='utf-8'):
+        """
+        Serializes ``obj`` to a JSON formatted string, using cjson.
+        """
         return cjson.encode(obj)
 
     def jloads(json_string):
+        """
+        Deserializes ``json_string`` (a string containing a JSON document)
+        to a Python object, using cjson.
+        """
         return cjson.decode(json_string)
 
 except ImportError:
@@ -122,16 +129,26 @@ except ImportError:
     # Declare json methods
     if sys.version_info[0] < 3:
         def jdumps(obj, encoding='utf-8'):
+            """
+            Serializes ``obj`` to a JSON formatted string.
+            """
             # Python 2 (explicit encoding)
             return json.dumps(obj, encoding=encoding)
 
     else:
         # Python 3
         def jdumps(obj, encoding='utf-8'):
+            """
+            Serializes ``obj`` to a JSON formatted string.
+            """
             # Python 3 (the encoding parameter has been removed)
             return json.dumps(obj)
 
     def jloads(json_string):
+        """
+        Deserializes ``json_string`` (a string containing a JSON document)
+        to a Python object.
+        """
         return json.loads(json_string)
 
 # ------------------------------------------------------------------------------
@@ -142,7 +159,7 @@ class ProtocolError(Exception):
     """
     JSON-RPC error
 
-    ProtocolError[0] can be:
+    ProtocolError.args[0] can be:
     * an error message (string)
     * a (code, message) tuple
     """
@@ -153,9 +170,9 @@ class AppError(ProtocolError):
     """
     Application error: the error code is not in the pre-defined ones
 
-    AppError[0][0]: Error code
-    AppError[0][1]: Error message or trace
-    AppError[0][2]: Associated data
+    AppError.args[0][0]: Error code
+    AppError.args[0][1]: Error message or trace
+    AppError.args[0][2]: Associated data
     """
     def data(self):
         """
@@ -235,6 +252,13 @@ class TransportMixIn(object):
                 connection.putheader(str(key), str(value))
 
     def send_content(self, connection, request_body):
+        """
+        Completes the request headers and sends the request body of a JSON-RPC
+        request over a HTTPConnection
+
+        :param connection: An HTTPConnection object
+        :param request_body: JSON-RPC request body
+        """
         # Convert the body first
         request_body = utils.to_bytes(request_body)
 
@@ -250,34 +274,66 @@ class TransportMixIn(object):
             connection.send(request_body)
 
     def getparser(self):
+        """
+        Create an instance of the parser, and attach it to an unmarshalling
+        object. Return both objects.
+
+        :return: The parser and unmarshaller instances
+        """
         target = JSONTarget()
         return JSONParser(target), target
 
 
 class JSONParser(object):
+    """
+    Default JSON parser
+    """
     def __init__(self, target):
+        """
+        Associates the target loader to the parser
+
+        :param target: a JSONTarget instance
+        """
         self.target = target
 
     def feed(self, data):
+        """
+        Feeds the associated target with the given data
+        """
         self.target.feed(data)
 
     def close(self):
+        """
+        Does nothing
+        """
         pass
 
 
 class JSONTarget(object):
+    """
+    Unmarshalls stream data to a string
+    """
     def __init__(self):
+        """
+        Sets up the unmarshaller
+        """
         self.data = []
 
     def feed(self, data):
-        # Store raw data: it might not contain whole wide-character
+        """
+        Stores the given raw data into a buffer
+        """
+        # Store raw data as it might not contain whole wide-character
         self.data.append(data)
 
     def close(self):
+        """
+        Unmarshalls the buffered data
+        """
         if not self.data:
             return ''
-
         else:
+            # Use type to have a valid join (str vs. bytes)
             data = type(self.data[0])().join(self.data)
             try:
                 # Convert the whole final string
@@ -290,10 +346,16 @@ class JSONTarget(object):
 
 
 class Transport(TransportMixIn, XMLTransport):
+    """
+    Mixed-in HTTP transport
+    """
     pass
 
 
 class SafeTransport(TransportMixIn, XMLSafeTransport):
+    """
+    Mixed-in HTTPS transport
+    """
     pass
 
 # ------------------------------------------------------------------------------
@@ -321,10 +383,7 @@ class ServerProxy(XMLServerProxy):
         """
         # Store the configuration
         self._config = config
-
-        if not version:
-            version = config.version
-        self.__version = version
+        self.__version = version or config.version
 
         schema, uri = splittype(uri)
         if schema not in ('http', 'https'):
@@ -350,6 +409,14 @@ class ServerProxy(XMLServerProxy):
         self.__transport.push_headers(headers or {})
 
     def _request(self, methodname, params, rpcid=None):
+        """
+        Calls a method on the remote server
+
+        :param methodname: Name of the method to call
+        :param params: Method parameters
+        :param rpcid: ID of the remote call
+        :return: The parsed result of the call
+        """
         request = dumps(params, methodname, encoding=self.__encoding,
                         rpcid=rpcid, version=self.__version,
                         config=self._config)
@@ -358,14 +425,27 @@ class ServerProxy(XMLServerProxy):
         return response['result']
 
     def _request_notify(self, methodname, params, rpcid=None):
+        """
+        Calls a method as a notification
+
+        :param methodname: Name of the method to call
+        :param params: Method parameters
+        :param rpcid: ID of the remote call
+        """
         request = dumps(params, methodname, encoding=self.__encoding,
                         rpcid=rpcid, version=self.__version, notify=True,
                         config=self._config)
         response = self._run_request(request, notify=True)
         check_for_errors(response)
-        return
 
-    def _run_request(self, request, notify=None):
+    def _run_request(self, request, notify=False):
+        """
+        Sends the given request to the remote server
+
+        :param request: The request to send
+        :param notify: Notification request flag (unused)
+        :return: The response as a parsed JSON object
+        """
         if self.__history is not None:
             self.__history.add_request(request)
 
@@ -387,10 +467,14 @@ class ServerProxy(XMLServerProxy):
 
         if not response:
             return None
-        return_obj = loads(response, self._config)
-        return return_obj
+        else:
+            return_obj = loads(response, self._config)
+            return return_obj
 
     def __getattr__(self, name):
+        """
+        Returns a callable object to call the remote service
+        """
         # Same as original, just with new _Method reference
         return _Method(self._request, name)
 
@@ -400,7 +484,6 @@ class ServerProxy(XMLServerProxy):
         """
         try:
             self.__transport.close()
-
         except AttributeError:
             # Not available in Python 2.6
             pass
@@ -422,14 +505,17 @@ class ServerProxy(XMLServerProxy):
 
     @property
     def _notify(self):
-        # Just like __getattr__, but with notify namespace.
+        """
+        Like __getattr__, but sending a notification request instead of a call
+        """
         return _Notify(self._request_notify)
 
     @contextlib.contextmanager
     def _additional_headers(self, headers):
         """
-        Allow to specify additional headers, to be added inside the with
-        block. Example of usage:
+        Allows to specify additional headers, to be added inside the with
+        block.
+        Example of usage:
 
         >>> with client._additional_headers({'X-Test' : 'Test'}) as new_client:
         ...     new_client.method()
@@ -444,8 +530,13 @@ class ServerProxy(XMLServerProxy):
 
 
 class _Method(XML_Method):
-
+    """
+    Some magic to bind an JSON-RPC method to an RPC server.
+    """
     def __call__(self, *args, **kwargs):
+        """
+        Sends an RPC request and returns the unmarshalled result
+        """
         if len(args) > 0 and len(kwargs) > 0:
             raise ProtocolError("Cannot use both positional and keyword "
                                 "arguments (according to JSON-RPC spec.)")
@@ -455,21 +546,28 @@ class _Method(XML_Method):
             return self.__send(self.__name, kwargs)
 
     def __getattr__(self, name):
+        """
+        Returns a Method object for nested calls
+        """
         if name == "__name__":
             return self.__name
-
-        self.__name = "{0}.{1}".format(self.__name, name)
-        return self
-        # The old method returned a new instance, but this seemed wasteful.
-        # The only thing that changes is the name.
-        # return _Method(self.__send, "{0}.{1}".format(self.__name, name))
+        return _Method(self.__send, "{0}.{1}".format(self.__name, name))
 
 
 class _Notify(object):
+    """
+    Same as _Method, but to send notifications
+    """
     def __init__(self, request):
+        """
+        Sets the method to call to send a request to the server
+        """
         self._request = request
 
     def __getattr__(self, name):
+        """
+        Returns a Method object, to be called as a notification
+        """
         return _Method(self._request, name)
 
 # ------------------------------------------------------------------------------
@@ -477,14 +575,26 @@ class _Notify(object):
 
 
 class MultiCallMethod(object):
-
+    """
+    Stores calls made to a MultiCall object for batch execution
+    """
     def __init__(self, method, notify=False, config=jsonrpclib.config.DEFAULT):
+        """
+        Sets up the store
+
+        :param method: Name of the method to call
+        :param notify: Notification flag
+        :param config: Request configuration
+        """
         self.method = method
         self.params = []
         self.notify = notify
         self._config = config
 
     def __call__(self, *args, **kwargs):
+        """
+        Normalizes call parameters
+        """
         if len(kwargs) > 0 and len(args) > 0:
             raise ProtocolError('JSON-RPC does not support both ' +
                                 'positional and keyword arguments.')
@@ -494,63 +604,128 @@ class MultiCallMethod(object):
             self.params = args
 
     def request(self, encoding=None, rpcid=None):
+        """
+        Returns the request object as JSON-formatted string
+        """
         return dumps(self.params, self.method, version=2.0,
                      encoding=encoding, rpcid=rpcid, notify=self.notify,
                      config=self._config)
 
     def __repr__(self):
+        """
+        String representation
+        """
         return str(self.request())
 
     def __getattr__(self, method):
-        new_method = "{0}.{1}".format(self.method, method)
-        self.method = new_method
+        """
+        Updates the object for a nested call
+        """
+        self.method = "{0}.{1}".format(self.method, method)
         return self
 
 
 class MultiCallNotify(object):
-
+    """
+    Same as MultiCallMethod but for notifications
+    """
     def __init__(self, multicall, config=jsonrpclib.config.DEFAULT):
+        """
+        Sets ip the store
+
+        :param multicall: The parent MultiCall instance
+        :param config: Request configuration
+        """
         self.multicall = multicall
         self._config = config
 
     def __getattr__(self, name):
+        """
+        Returns the MultiCallMethod to use as a notification
+        """
         new_job = MultiCallMethod(name, notify=True, config=self._config)
         self.multicall._job_list.append(new_job)
         return new_job
 
 
 class MultiCallIterator(object):
-
+    """
+    Iterates over the results of a MultiCall.
+    Exceptions are raised in response to JSON-RPC faults
+    """
     def __init__(self, results):
+        """
+        Sets up the results store
+        """
         self.results = results
 
-    def __iter__(self):
-        for i in range(0, len(self.results)):
-            yield self[i]
-        raise StopIteration
-
-    def __getitem__(self, i):
-        item = self.results[i]
+    def __get_result(self, item):
+        """
+        Checks for error and returns the "real" result stored in a MultiCall
+        result.
+        """
         check_for_errors(item)
         return item['result']
 
+    def __iter__(self):
+        """
+        Iterates over all results
+        """
+        for item in self.results:
+            yield self.__get_result(item)
+        raise StopIteration
+
+    def __getitem__(self, i):
+        """
+        Returns the i-th object of the results
+        """
+        return self.__get_result(self.results[i])
+
     def __len__(self):
+        """
+        Returns the number of results stored
+        """
         return len(self.results)
 
 
 class MultiCall(object):
+    """
+    server -> a object used to boxcar method calls, where server should be a
+    ServerProxy object.
 
+    Methods can be added to the MultiCall using normal
+    method call syntax e.g.:
+
+    multicall = MultiCall(server_proxy)
+    multicall.add(2,3)
+    multicall.get_address("Guido")
+
+    To execute the multicall, call the MultiCall object e.g.:
+
+    add_result, address = multicall()
+    """
     def __init__(self, server, config=jsonrpclib.config.DEFAULT):
+        """
+        Sets up the multicall
+
+        :param server: A ServerProxy object
+        :param config: Request configuration
+        """
         self._server = server
         self._job_list = []
         self._config = config
 
     def _request(self):
+        """
+        Sends the request to the server and returns the responses
+
+        :return: A MultiCallIterator object
+        """
         if len(self._job_list) < 1:
             # Should we alert? This /is/ pretty obvious.
             return
-        request_body = "[ {0} ]".format(','.join(job.request()
-                                                 for job in self._job_list))
+        request_body = "[ {0} ]".format(
+            ','.join(job.request() for job in self._job_list))
         responses = self._server._run_request(request_body)
         del self._job_list[:]
         if not responses:
@@ -559,9 +734,15 @@ class MultiCall(object):
 
     @property
     def _notify(self):
+        """
+        Prepares a notification call
+        """
         return MultiCallNotify(self, self._config)
 
     def __getattr__(self, name):
+        """
+        Registers a method call
+        """
         new_job = MultiCallMethod(name, config=self._config)
         self._job_list.append(new_job)
         return new_job
@@ -670,7 +851,7 @@ class Payload(object):
         :param params: Method parameters
         :return: A JSON-RPC request dictionary
         """
-        if type(method) not in utils.StringTypes:
+        if not isinstance(method, utils.string_types):
             raise ValueError('Method name must be a string.')
 
         if not self.id:
@@ -766,8 +947,8 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
     if is_response:
         valid_params.append(type(None))
 
-    if methodname in utils.StringTypes and \
-            not isinstance(params, valid_params):
+    if isinstance(methodname, utils.string_types) and \
+            not isinstance(params, tuple(valid_params)):
         """
         If a method, and params are not in a listish or a Fault,
         error out.
@@ -783,7 +964,7 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
         # pylint: disable=E1103
         return payload.error(params.faultCode, params.faultString)
 
-    if type(methodname) not in utils.StringTypes and not is_response:
+    if not isinstance(methodname, utils.string_types) and not is_response:
         # Neither a request nor a response
         raise ValueError('Method name must be a string, or is_response '
                          'must be set to True.')
@@ -802,7 +983,6 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
     if is_notify:
         # Prepare a notification dictionary
         return payload.notify(methodname, params)
-
     else:
         # Prepare a method call dictionary
         return payload.request(methodname, params)
@@ -828,12 +1008,8 @@ def dumps(params=None, methodname=None, methodresponse=None,
     request = dump(params, methodname, rpcid, version, methodresponse, notify,
                    config)
 
-    # Set the default encoding
-    if not encoding:
-        encoding = "UTF-8"
-
     # Returns it as a JSON string
-    return jdumps(request, encoding=encoding)
+    return jdumps(request, encoding=encoding or "UTF-8")
 
 
 def load(data, config=jsonrpclib.config.DEFAULT):
@@ -914,7 +1090,6 @@ def check_for_errors(result):
             try:
                 # Get the message (jsonrpclib)
                 message = result['error']['message']
-
             except KeyError:
                 # Get the trace (jabsorb)
                 message = result['error'].get('trace', '<no error message>')
@@ -923,7 +1098,6 @@ def check_for_errors(result):
                 # Pre-defined errors
                 # See http://www.jsonrpc.org/specification#error_object
                 raise ProtocolError((code, message))
-
             else:
                 # Application error
                 data = result['error'].get('data', None)
@@ -943,21 +1117,36 @@ def check_for_errors(result):
     return result
 
 
-def isbatch(result):
-    if not isinstance(result, (utils.ListType, utils.TupleType)):
+def isbatch(request):
+    """
+    Tests if the given request is a batch call, i.e. a list of multiple calls
+    :param request: a JSON-RPC request object
+    :return: True if the request is a batch call
+    """
+    if not isinstance(request, (utils.ListType, utils.TupleType)):
+        # Not a list: not a batch call
         return False
-    elif len(result) < 1:
+    elif len(request) < 1:
+        # Only one request: not a batch call
         return False
-    elif not isinstance(result[0], utils.DictType):
+    elif not isinstance(request[0], utils.DictType):
+        # One of the requests is not a dictionary, i.e. a JSON Object
+        # therefore it is not a valid JSON-RPC request
         return False
-    elif 'jsonrpc' not in result[0].keys():
+    elif 'jsonrpc' not in request[0].keys():
+        # No "jsonrpc" version in the JSON object: not a request
         return False
+
     try:
-        version = float(result[0]['jsonrpc'])
+        version = float(request[0]['jsonrpc'])
     except ValueError:
+        # Bad version of JSON-RPC
         raise ProtocolError('"jsonrpc" key must be a float(able) value.')
+
     if version < 2:
+        # Batch call were not supported before JSON-RPC 2.0
         return False
+
     return True
 
 

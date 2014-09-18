@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 :license: Apache License 2.0
-:version: 0.1.9
+:version: 0.2.1
 """
 
 # Module version
@@ -30,7 +30,7 @@ __docformat__ = "restructuredtext en"
 # ------------------------------------------------------------------------------
 # Local modules
 from jsonrpclib import Fault
-import jsonrpclib
+import jsonrpclib.config
 import jsonrpclib.utils as utils
 
 # Standard library
@@ -53,7 +53,8 @@ try:
     # Windows
     import fcntl
 except ImportError:
-    # Others
+    # Other systems
+    # pylint: disable=C0103
     fcntl = None
 
 # ------------------------------------------------------------------------------
@@ -68,7 +69,6 @@ def get_version(request):
     """
     if 'jsonrpc' in request:
         return 2.0
-
     elif 'id' in request:
         return 1.0
 
@@ -106,7 +106,7 @@ def validate_request(request, json_config):
     params = request.get('params')
     param_types = (utils.ListType, utils.DictType, utils.TupleType)
 
-    if not method or not isinstance(method, utils.StringTypes) or \
+    if not method or not isinstance(method, utils.string_types) or \
             not isinstance(params, param_types):
         # Invalid type of method name or parameters
         return Fault(-32600, 'Invalid request parameters or method.',
@@ -126,18 +126,20 @@ class NoMulticallResult(Exception):
 
 
 class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
+    """
+    Mix-in class that dispatches JSON-RPC requests.
+
+    This class is used to register JSON-RPC method handlers
+    and then to dispatch them. This class doesn't need to be
+    instanced directly when used by SimpleJSONRPCServer.
+    """
     def __init__(self, encoding=None, config=jsonrpclib.config.DEFAULT):
         """
         Sets up the dispatcher with the given encoding.
         None values are allowed.
         """
-        if not encoding:
-            # Default encoding
-            encoding = "UTF-8"
-
-        xmlrpcserver.SimpleXMLRPCDispatcher.__init__(self,
-                                                     allow_none=True,
-                                                     encoding=encoding)
+        xmlrpcserver.SimpleXMLRPCDispatcher.__init__(
+            self, allow_none=True, encoding=encoding or "UTF-8")
         self.json_config = config
 
     def _unmarshaled_dispatch(self, request, dispatch_method=None):
@@ -175,7 +177,6 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                 if isinstance(resp_entry, Fault):
                     # pylint: disable=E1103
                     responses.append(resp_entry.dump())
-
                 elif resp_entry is not None:
                     responses.append(resp_entry)
 
@@ -200,19 +201,19 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
 
             return response
 
-    def _marshaled_dispatch(self, data, dispatch_method=None):
+    def _marshaled_dispatch(self, data, dispatch_method=None, path=None):
         """
         Parses the request data (marshaled), calls method(s) and returns a
         JSON string (marshaled)
 
         :param data: A JSON request string
         :param dispatch_method: Custom dispatch method (for method resolution)
+        :param path: Unused parameter, to keep compatibility with xmlrpclib
         :return: A JSON-RPC response string (marshaled)
         """
         # Parse the request
         try:
             request = jsonrpclib.loads(data, self.json_config)
-
         except Exception as ex:
             # Parsing/loading error
             fault = Fault(-32700, 'Request {0} invalid. ({1}:{2})'
@@ -227,7 +228,6 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
             if response is not None:
                 # Compute the string representation of the dictionary/list
                 return jsonrpclib.jdumps(response, self.encoding)
-
             else:
                 # No result (notification)
                 return ''
@@ -245,8 +245,6 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
         :return: A JSON-RPC response dictionary, or None if it was a
                  notification request
         """
-        # TODO - Use the multiprocessing and skip the response if
-        # it is a notification
         method = request.get('method')
         params = request.get('params')
 
@@ -261,6 +259,7 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
             config = self.json_config
 
         try:
+            # TODO - Use the multiprocessing if it is a notification
             # Call the method
             if dispatch_method is not None:
                 response = dispatch_method(method, params)
@@ -281,10 +280,8 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
 
         # Prepare a JSON-RPC dictionary
         try:
-            # TODO: use a copy of the configuration, to JSON-RPC version
             return jsonrpclib.dump(response, rpcid=request['id'],
                                    is_response=True, config=config)
-
         except:
             # JSON conversion exception
             exc_type, exc_value, _ = sys.exc_info()
@@ -307,14 +304,12 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
         try:
             # Look into registered methods
             func = self.funcs[method]
-
         except KeyError:
             if self.instance is not None:
                 # Try with the registered instance
                 try:
                     # Instance has a custom dispatcher
                     return getattr(self.instance, '_dispatch')(method, params)
-
                 except AttributeError:
                     # Resolve the method name in the instance
                     try:
@@ -329,22 +324,18 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                 # Call the method
                 if isinstance(params, utils.ListType):
                     return func(*params)
-
                 else:
                     return func(**params)
-
             except TypeError as ex:
                 # Maybe the parameters are wrong
                 return Fault(-32602, 'Invalid parameters: {0}'.format(ex),
                              config=config)
-
             except:
                 # Method exception
                 err_lines = traceback.format_exc().splitlines()
                 trace_string = '{0} | {1}'.format(err_lines[-3], err_lines[-1])
                 return Fault(-32603, 'Server error: {0}'.format(trace_string),
                              config=config)
-
         else:
             # Unknown method
             return Fault(-32601, 'Method {0} not supported.'.format(method),
@@ -388,7 +379,7 @@ class SimpleJSONRPCRequestHandler(xmlrpcserver.SimpleXMLRPCRequestHandler):
             # No exception: send a 200 OK
             self.send_response(200)
 
-        except Exception:
+        except:
             # Exception: send 500 Server Error
             self.send_response(500)
             err_lines = traceback.format_exc().splitlines()
@@ -422,6 +413,7 @@ class SimpleJSONRPCServer(socketserver.TCPServer, SimpleJSONRPCDispatcher):
     # This simplifies server restart after error
     allow_reuse_address = True
 
+    # pylint: disable=C0103
     def __init__(self, addr, requestHandler=SimpleJSONRPCRequestHandler,
                  logRequests=True, encoding=None, bind_and_activate=True,
                  address_family=socket.AF_INET,
@@ -441,12 +433,16 @@ class SimpleJSONRPCServer(socketserver.TCPServer, SimpleJSONRPCDispatcher):
         SimpleJSONRPCDispatcher.__init__(self, encoding, config)
 
         # Prepare the server configuration
+        # logRequests is used by SimpleXMLRPCRequestHandler
         self.logRequests = logRequests
         self.address_family = address_family
         self.json_config = config
 
         # Work on the request handler
         class RequestHandlerWrapper(requestHandler, object):
+            """
+            Wraps the request handle to have access to the configuration
+            """
             def __init__(self, *args, **kwargs):
                 """
                 Constructs the wrapper after having stored the configuration

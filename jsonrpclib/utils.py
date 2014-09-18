@@ -36,12 +36,14 @@ import sys
 if sys.version_info[0] < 3:
     # Python 2
     import types
-    StringTypes = types.StringTypes
-
-    string_types = (
-        types.StringType,
-        types.UnicodeType
-    )
+    try:
+        string_types = (
+            types.StringType,
+            types.UnicodeType
+        )
+    except NameError:
+        # Python built without unicode support
+        string_types = (types.StringType,)
 
     numeric_types = (
         types.IntType,
@@ -55,7 +57,6 @@ if sys.version_info[0] < 3:
         """
         if type(string) is unicode:
             return str(string)
-
         return string
 
     def from_bytes(data):
@@ -64,15 +65,10 @@ if sys.version_info[0] < 3:
         """
         if type(data) is str:
             return data
-
         return str(data)
-
-# ------------------------------------------------------------------------------
 
 else:
     # Python 3
-    StringTypes = (str,)
-
     string_types = (
         bytes,
         str
@@ -89,7 +85,6 @@ else:
         """
         if type(string) is bytes:
             return string
-
         return bytes(string, "UTF-8")
 
     def from_bytes(data):
@@ -98,7 +93,6 @@ else:
         """
         if type(data) is str:
             return data
-
         return str(data, "UTF-8")
 
 # ------------------------------------------------------------------------------
@@ -107,7 +101,6 @@ else:
 DictType = dict
 
 ListType = list
-SetTypes = (set, frozenset)
 TupleType = tuple
 
 iterable_types = (
