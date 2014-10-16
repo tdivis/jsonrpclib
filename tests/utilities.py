@@ -15,32 +15,40 @@ import threading
 # ------------------------------------------------------------------------------
 # Test methods
 
+
 def subtract(minuend, subtrahend):
     """
     Using the keywords from the JSON-RPC v2 doc
     """
     return minuend - subtrahend
 
+
 def add(x, y):
     return x + y
+
 
 def update(*args):
     return args
 
+
 def summation(*args):
     return sum(args)
+
 
 def notify_hello(*args):
     return args
 
+
 def get_data():
     return ['hello', 5]
+
 
 def ping():
     return True
 
 # ------------------------------------------------------------------------------
 # Server utility class
+
 
 class UtilityServer(object):
     """
@@ -52,7 +60,6 @@ class UtilityServer(object):
         """
         self._server = None
         self._thread = None
-
 
     def start(self, addr, port):
         """

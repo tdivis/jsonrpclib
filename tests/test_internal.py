@@ -19,6 +19,7 @@ import unittest
 
 # ------------------------------------------------------------------------------
 
+
 class InternalTests(unittest.TestCase):
     """
     These tests verify that the client and server portions of
@@ -32,14 +33,12 @@ class InternalTests(unittest.TestCase):
         # Prepare the client
         self.history = jsonrpclib.history.History()
 
-
     def tearDown(self):
         """
         Post-test clean up
         """
         # Stop the server
         self.server.stop()
-
 
     def get_client(self):
         return jsonrpclib.ServerProxy('http://localhost:{0}'.format(self.port),
@@ -66,12 +65,13 @@ class InternalTests(unittest.TestCase):
 
     def test_single_kwargs_and_args(self):
         client = self.get_client()
-        self.assertRaises(jsonrpclib.ProtocolError, client.add, (5,), {'y':10})
+        self.assertRaises(jsonrpclib.ProtocolError,
+                          client.add, (5,), {'y': 10})
 
     def test_single_notify(self):
         client = self.get_client()
         result = client._notify.add(5, 10)
-        self.assertTrue(result == None)
+        self.assertIsNone(result)
 
     def test_single_namespace(self):
         client = self.get_client()
@@ -82,11 +82,9 @@ class InternalTests(unittest.TestCase):
             "jsonrpc": "2.0", "params": [1, 2, 4],
             "id": "5", "method": "namespace.sum"
         }
-        verify_response = {
-            "jsonrpc": "2.0", "result": 7, "id": "5"
-        }
+        verify_response = {"jsonrpc": "2.0", "result": 7,
+                           "id": request['id']}
         verify_request['id'] = request['id']
-        verify_response['id'] = request['id']
         self.assertTrue(verify_request == request)
         self.assertTrue(verify_response == response)
 

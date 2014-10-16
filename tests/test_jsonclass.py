@@ -22,6 +22,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------
 
+
 class Bean(object):
     """
     Sample bean
@@ -55,7 +56,6 @@ class InheritanceBean(Bean):
         self.first = True
         self._second = [1, 2, 3]
         self.__third = {1: "string", "string": 1}
-
 
     def __eq__(self, other):
         """
@@ -133,6 +133,7 @@ class SecondInheritanceSlotBean(InheritanceSlotBean):
             and self._fourth == other._fourth
 
 # ------------------------------------------------------------------------------
+
 
 class SerializationTests(unittest.TestCase):
     """
