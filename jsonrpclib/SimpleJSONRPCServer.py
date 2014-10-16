@@ -43,8 +43,8 @@ try:
     # pylint: disable=F0401,E0611
     import xmlrpc.server as xmlrpcserver
     import socketserver
-except ImportError:
-    # Python 2
+except (ImportError, AttributeError):
+    # Python 2 or IronPython
     # pylint: disable=F0401,E0611
     import SimpleXMLRPCServer as xmlrpcserver
     import SocketServer as socketserver
