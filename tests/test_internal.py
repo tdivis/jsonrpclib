@@ -71,7 +71,7 @@ class InternalTests(unittest.TestCase):
     def test_single_notify(self):
         client = self.get_client()
         result = client._notify.add(5, 10)
-        self.assertIsNone(result)
+        self.assertTrue(result is None)
 
     def test_single_namespace(self):
         client = self.get_client()
