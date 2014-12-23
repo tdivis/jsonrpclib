@@ -34,9 +34,13 @@ import jsonrpclib.config
 import jsonrpclib.utils as utils
 
 # Standard library
+import logging
 import socket
 import sys
 import traceback
+
+# Prepare the logger
+_logger = logging.getLogger(__name__)
 
 try:
     # Python 3
@@ -85,9 +89,11 @@ def validate_request(request, json_config):
     """
     if not isinstance(request, utils.DictType):
         # Invalid request type
-        return Fault(-32600, 'Request must be a dict, not {0}'
-                     .format(type(request).__name__),
-                     config=json_config)
+        fault = Fault(-32600, 'Request must be a dict, not {0}'
+                      .format(type(request).__name__),
+                      config=json_config)
+        _logger.warning("Invalid request content: %s", fault)
+        return fault
 
     # Get the request ID
     rpcid = request.get('id', None)
@@ -95,8 +101,10 @@ def validate_request(request, json_config):
     # Check request version
     version = get_version(request)
     if not version:
-        return Fault(-32600, 'Request {0} invalid.'.format(request),
-                     rpcid=rpcid, config=json_config)
+        fault = Fault(-32600, 'Request {0} invalid.'.format(request),
+                      rpcid=rpcid, config=json_config)
+        _logger.warning("No version in request: %s", fault)
+        return fault
 
     # Default parameters: empty list
     request.setdefault('params', [])
@@ -109,8 +117,10 @@ def validate_request(request, json_config):
     if not method or not isinstance(method, utils.string_types) or \
             not isinstance(params, param_types):
         # Invalid type of method name or parameters
-        return Fault(-32600, 'Invalid request parameters or method.',
-                     rpcid=rpcid, config=json_config)
+        fault = Fault(-32600, 'Invalid request parameters or method.',
+                      rpcid=rpcid, config=json_config)
+        _logger.warning("Invalid request content: %s", fault)
+        return fault
 
     # Valid request
     return True
@@ -157,6 +167,7 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
             # Invalid request dictionary
             fault = Fault(-32600, 'Request invalid -- no request data.',
                           config=self.json_config)
+            _logger.warning("Invalid request: %s", fault)
             return fault.dump()
 
         if isinstance(request, utils.ListType):
@@ -182,6 +193,7 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
 
             if not responses:
                 # No non-None result
+                _logger.error("No result in Multicall")
                 raise NoMulticallResult("No result")
 
             return responses
@@ -219,19 +231,18 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
             fault = Fault(-32700, 'Request {0} invalid. ({1}:{2})'
                           .format(data, type(ex).__name__, ex),
                           config=self.json_config)
+            _logger.warning("Error parsing request: %s", fault)
             return fault.response()
 
         # Get the response dictionary
         try:
             response = self._unmarshaled_dispatch(request, dispatch_method)
-
             if response is not None:
                 # Compute the string representation of the dictionary/list
                 return jsonrpclib.jdumps(response, self.encoding)
             else:
                 # No result (notification)
                 return ''
-
         except NoMulticallResult:
             # Return an empty string (jsonrpclib internal behaviour)
             return ''
@@ -265,12 +276,11 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                 response = dispatch_method(method, params)
             else:
                 response = self._dispatch(method, params, config)
-
-        except:
+        except Exception as ex:
             # Return a fault
-            exc_type, exc_value, _ = sys.exc_info()
-            fault = Fault(-32603, '{0}:{1}'.format(exc_type, exc_value),
+            fault = Fault(-32603, '{0}:{1}'.format(type(ex).__name__, ex),
                           config=config)
+            _logger.error("Error calling method %s: %s", method, fault)
             return fault.dump()
 
         if 'id' not in request or request['id'] in (None, ''):
@@ -282,11 +292,11 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
         try:
             return jsonrpclib.dump(response, rpcid=request['id'],
                                    is_response=True, config=config)
-        except:
+        except Exception as ex:
             # JSON conversion exception
-            exc_type, exc_value, _ = sys.exc_info()
-            fault = Fault(-32603, '{0}:{1}'.format(exc_type, exc_value),
+            fault = Fault(-32603, '{0}:{1}'.format(type(ex).__name__, ex),
                           config=config)
+            _logger.error("Error preparing JSON-RPC result: %s", fault)
             return fault.dump()
 
     def _dispatch(self, method, params, config=None):
@@ -328,18 +338,24 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                     return func(**params)
             except TypeError as ex:
                 # Maybe the parameters are wrong
-                return Fault(-32602, 'Invalid parameters: {0}'.format(ex),
-                             config=config)
+                fault = Fault(-32602, 'Invalid parameters: {0}'.format(ex),
+                              config=config)
+                _logger.warning("Invalid call parameters: %s", fault)
+                return fault
             except:
                 # Method exception
                 err_lines = traceback.format_exc().splitlines()
                 trace_string = '{0} | {1}'.format(err_lines[-3], err_lines[-1])
-                return Fault(-32603, 'Server error: {0}'.format(trace_string),
-                             config=config)
+                fault = Fault(-32603, 'Server error: {0}'.format(trace_string),
+                              config=config)
+                _logger.exception("Server-side exception: %s", fault)
+                return fault
         else:
             # Unknown method
-            return Fault(-32601, 'Method {0} not supported.'.format(method),
-                         config=config)
+            fault = Fault(-32601, 'Method {0} not supported.'.format(method),
+                          config=config)
+            _logger.warning("Unknown method: %s", fault)
+            return fault
 
 # ------------------------------------------------------------------------------
 
@@ -386,6 +402,7 @@ class SimpleJSONRPCRequestHandler(xmlrpcserver.SimpleXMLRPCRequestHandler):
             trace_string = '{0} | {1}'.format(err_lines[-3], err_lines[-1])
             fault = jsonrpclib.Fault(-32603, 'Server error: {0}'
                                      .format(trace_string), config=config)
+            _logger.exception("Server-side error: %s", fault)
             response = fault.response()
 
         if response is None:

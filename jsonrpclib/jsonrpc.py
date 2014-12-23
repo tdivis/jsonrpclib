@@ -66,8 +66,12 @@ import jsonrpclib.utils as utils
 
 # Standard library
 import contextlib
+import logging
 import sys
 import uuid
+
+# Create the logger
+_logger = logging.getLogger(__name__)
 
 try:
     # Python 3
@@ -99,6 +103,7 @@ try:
     # pylint: disable=F0401,E0611
     # Using cjson
     import cjson
+    _logger.debug("Using cjson as JSON library")
 
     # Declare cjson methods
     def jdumps(obj, encoding='utf-8'):
@@ -119,10 +124,14 @@ except ImportError:
     # Use json or simplejson
     try:
         import json
+        _logger.debug("Using json as JSON library")
+
     except ImportError:
         try:
             import simplejson as json
+            _logger.debug("Using simplejson as JSON library")
         except ImportError:
+            _logger.error("No supported JSON library found")
             raise ImportError('You must have the cjson, json, or simplejson '
                               'module(s) available.')
 
@@ -387,6 +396,8 @@ class ServerProxy(XMLServerProxy):
 
         schema, uri = splittype(uri)
         if schema not in ('http', 'https'):
+            _logger.error("jsonrpclib only support http(s) URIs, not %s",
+                          schema)
             raise IOError('Unsupported JSON-RPC protocol.')
 
         self.__host, self.__handler = splithost(uri)
@@ -537,10 +548,10 @@ class _Method(XML_Method):
         """
         Sends an RPC request and returns the unmarshalled result
         """
-        if len(args) > 0 and len(kwargs) > 0:
+        if args and kwargs:
             raise ProtocolError("Cannot use both positional and keyword "
                                 "arguments (according to JSON-RPC spec.)")
-        if len(args) > 0:
+        if args:
             return self.__send(self.__name, args)
         else:
             return self.__send(self.__name, kwargs)
@@ -595,10 +606,10 @@ class MultiCallMethod(object):
         """
         Normalizes call parameters
         """
-        if len(kwargs) > 0 and len(args) > 0:
+        if kwargs and args:
             raise ProtocolError('JSON-RPC does not support both ' +
                                 'positional and keyword arguments.')
-        if len(kwargs) > 0:
+        if kwargs:
             self.params = kwargs
         else:
             self.params = args
@@ -1102,8 +1113,6 @@ def check_for_errors(result):
                 # Application error
                 data = result['error'].get('data', None)
                 raise AppError((code, message, data))
-
-            raise ProtocolError((code, message))
 
         elif isinstance(result['error'], dict) and len(result['error']) == 1:
             # Error with a single entry ('reason', ...): use its content
