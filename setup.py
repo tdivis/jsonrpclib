@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 # Module version
-__version_info__ = (0, 2, 1)
+__version_info__ = (0, 2, 2)
 __version__ = ".".join(str(x) for x in __version_info__)
 
 # Documentation strings format
@@ -36,7 +36,6 @@ setup(name="jsonrpclib-pelix",
       author="Thomas Calmant",
       author_email="thomas.calmant+github@gmail.com",
       url="http://github.com/tcalmant/jsonrpclib/",
-      download_url='https://github.com/tcalmant/jsonrpclib/archive/master.zip',
       description="This project is an implementation of the JSON-RPC v2.0 "
                   "specification (backwards-compatible) as a client library. "
                   "This version is a fork of jsonrpclib by Josh Marshall, "
