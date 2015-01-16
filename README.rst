@@ -133,6 +133,23 @@ since the SimpleJSONRPCServer is distributed within the ``jsonrpclib`` library.
    server.register_function(lambda x: x, 'ping')
    server.serve_forever()
 
+To start protect the server with SSL, use the following snippet:
+
+.. code-block:: python
+
+   from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+
+   # Setup the SSL socket
+   server = SimpleJSONRPCServer(('localhost', 8080), bind_and_activate=False)
+   server.socket = ssl.wrap_socket(server.socket, certfile='server.pem',
+                                   server_side=True)
+   server.server_bind()
+   server.server_activate()
+
+   # ... register functions
+   # Start the server
+   server.serve_forever()
+
 
 Client Usage
 ************
