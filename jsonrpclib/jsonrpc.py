@@ -192,6 +192,67 @@ class AppError(ProtocolError):
         return self.args[0][2]
 
 
+class JSONParser(object):
+    """
+    Default JSON parser
+    """
+    def __init__(self, target):
+        """
+        Associates the target loader to the parser
+
+        :param target: a JSONTarget instance
+        """
+        self.target = target
+
+    def feed(self, data):
+        """
+        Feeds the associated target with the given data
+        """
+        self.target.feed(data)
+
+    def close(self):
+        """
+        Does nothing
+        """
+        pass
+
+
+class JSONTarget(object):
+    """
+    Unmarshalls stream data to a string
+    """
+    def __init__(self):
+        """
+        Sets up the unmarshaller
+        """
+        self.data = []
+
+    def feed(self, data):
+        """
+        Stores the given raw data into a buffer
+        """
+        # Store raw data as it might not contain whole wide-character
+        self.data.append(data)
+
+    def close(self):
+        """
+        Unmarshalls the buffered data
+        """
+        if not self.data:
+            return ''
+        else:
+            # Use type to have a valid join (str vs. bytes)
+            data = type(self.data[0])().join(self.data)
+            try:
+                # Convert the whole final string
+                data = utils.from_bytes(data)
+            except:
+                # Try a pass-through
+                pass
+
+            return data
+
+
 class TransportMixIn(object):
     """ Just extends the XMLRPC transport where necessary. """
     # for Python 2.7 support
@@ -204,7 +265,7 @@ class TransportMixIn(object):
     # Use the configuration to change the content-type
     readonly_headers = ('content-length', 'content-type')
 
-    def __init__(self, config=jsonrpclib.config.DEFAULT):
+    def __init__(self, config=jsonrpclib.config.DEFAULT, context=None):
         """
         Sets up the transport
 
@@ -212,6 +273,9 @@ class TransportMixIn(object):
         """
         # Store the configuration
         self._config = config
+
+        # Store the SSL context
+        self.context = context
 
         # Set up the user agent
         self.user_agent = config.user_agent
@@ -293,67 +357,6 @@ class TransportMixIn(object):
         return JSONParser(target), target
 
 
-class JSONParser(object):
-    """
-    Default JSON parser
-    """
-    def __init__(self, target):
-        """
-        Associates the target loader to the parser
-
-        :param target: a JSONTarget instance
-        """
-        self.target = target
-
-    def feed(self, data):
-        """
-        Feeds the associated target with the given data
-        """
-        self.target.feed(data)
-
-    def close(self):
-        """
-        Does nothing
-        """
-        pass
-
-
-class JSONTarget(object):
-    """
-    Unmarshalls stream data to a string
-    """
-    def __init__(self):
-        """
-        Sets up the unmarshaller
-        """
-        self.data = []
-
-    def feed(self, data):
-        """
-        Stores the given raw data into a buffer
-        """
-        # Store raw data as it might not contain whole wide-character
-        self.data.append(data)
-
-    def close(self):
-        """
-        Unmarshalls the buffered data
-        """
-        if not self.data:
-            return ''
-        else:
-            # Use type to have a valid join (str vs. bytes)
-            data = type(self.data[0])().join(self.data)
-            try:
-                # Convert the whole final string
-                data = utils.from_bytes(data)
-            except:
-                # Try a pass-through
-                pass
-
-            return data
-
-
 class Transport(TransportMixIn, XMLTransport):
     """
     Mixed-in HTTP transport
@@ -377,7 +380,7 @@ class ServerProxy(XMLServerProxy):
     """
     def __init__(self, uri, transport=None, encoding=None,
                  verbose=0, version=None, headers=None, history=None,
-                 config=jsonrpclib.config.DEFAULT):
+                 config=jsonrpclib.config.DEFAULT, context=None):
         """
         Sets up the server proxy
 
@@ -389,6 +392,7 @@ class ServerProxy(XMLServerProxy):
         :param headers: Custom additional headers for each request
         :param history: History object (for tests)
         :param config: A JSONRPClib Config instance
+        :param context: The optional SSLContext to use
         """
         # Store the configuration
         self._config = config
@@ -407,7 +411,7 @@ class ServerProxy(XMLServerProxy):
 
         if transport is None:
             if schema == 'https':
-                transport = SafeTransport(config=config)
+                transport = SafeTransport(config=config, context=context)
             else:
                 transport = Transport(config=config)
         self.__transport = transport
