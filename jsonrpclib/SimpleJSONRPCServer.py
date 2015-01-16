@@ -17,11 +17,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 :license: Apache License 2.0
-:version: 0.2.1
+:version: 0.2.3
 """
 
 # Module version
-__version_info__ = (0, 2, 2)
+__version_info__ = (0, 2, 3)
 __version__ = ".".join(str(x) for x in __version_info__)
 
 # Documentation strings format
