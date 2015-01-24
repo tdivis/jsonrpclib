@@ -152,6 +152,15 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
             self, allow_none=True, encoding=encoding or "UTF-8")
         self.json_config = config
 
+        # Notification thread pool
+        self.__pool = None
+
+    def set_pool(self, thread_pool):
+        """
+        Sets the thread pool to use to handle notifications
+        """
+        self.__pool = thread_pool
+
     def _unmarshaled_dispatch(self, request, dispatch_method=None):
         """
         Loads the request dictionary (unmarshaled), calls the method(s)
@@ -269,24 +278,36 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
             # Keep server configuration as is
             config = self.json_config
 
-        try:
-            # TODO - Use the multiprocessing if it is a notification
-            # Call the method
+        # Test if this is a notification request
+        is_notification = 'id' not in request or request['id'] in (None, '')
+        if is_notification and self.__pool is not None:
+            # Use the thread pool for notifications
             if dispatch_method is not None:
-                response = dispatch_method(method, params)
+                self.__pool.enqueue(dispatch_method, method, params)
             else:
-                response = self._dispatch(method, params, config)
-        except Exception as ex:
-            # Return a fault
-            fault = Fault(-32603, '{0}:{1}'.format(type(ex).__name__, ex),
-                          config=config)
-            _logger.error("Error calling method %s: %s", method, fault)
-            return fault.dump()
+                self.__pool.enqueue(self._dispatch, method, params, config)
 
-        if 'id' not in request or request['id'] in (None, ''):
-            # It's a notification, no result needed
-            # Do not use 'not id' as it might be the integer 0
+            # Return immediately
             return None
+        else:
+            # Synchronous call
+            try:
+                # Call the method
+                if dispatch_method is not None:
+                    response = dispatch_method(method, params)
+                else:
+                    response = self._dispatch(method, params, config)
+            except Exception as ex:
+                # Return a fault
+                fault = Fault(-32603, '{0}:{1}'.format(type(ex).__name__, ex),
+                              config=config)
+                _logger.error("Error calling method %s: %s", method, fault)
+                return fault.dump()
+
+            if is_notification:
+                # It's a notification, no result needed
+                # Do not use 'not id' as it might be the integer 0
+                return None
 
         # Prepare a JSON-RPC dictionary
         try:

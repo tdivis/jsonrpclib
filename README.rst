@@ -151,6 +151,38 @@ To start protect the server with SSL, use the following snippet:
    server.serve_forever()
 
 
+By default, notification calls are handled in the request handling thread.
+It is possible to use a thread pool to handle them, by giving it to the server
+using the ``set_pool``method:
+
+.. code-block:: python
+
+   from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+   from jsonrpclib.threadpool import ThreadPool
+
+   # Setup the thread pool: between 0 and 10 threads
+   pool = ThreadPool(max_threads=10, min_threads=0)
+
+   # Don't forget to start it
+   pool.start()
+
+   # Setup the server
+   server = SimpleJSONRPCServer(('localhost', 8080), config)
+   server.set_pool(pool)
+
+   # Register methods
+   server.register_function(pow)
+   server.register_function(lambda x,y: x+y, 'add')
+   server.register_function(lambda x: x, 'ping')
+
+   try:
+       server.serve_forever()
+   finally:
+       # Stop the thread pool (let threads finish their current task)
+       pool.stop()
+       server.set_pool(None)
+
+
 Client Usage
 ************
 
