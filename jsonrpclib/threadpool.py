@@ -309,7 +309,7 @@ class ThreadPool(object):
             nb_threads = nb_pending_tasks
 
         # Create the threads
-        for i in range(nb_threads):
+        for _ in range(nb_threads):
             self.__start_thread()
 
     def __start_thread(self):
@@ -317,7 +317,7 @@ class ThreadPool(object):
         Starts a new thread, if possible
         """
         with self.__lock:
-            if self.__nb_threads > self._max_threads:
+            if self.__nb_threads >= self._max_threads:
                 # Can't create more threads
                 return False
 
@@ -436,7 +436,7 @@ class ThreadPool(object):
             # Wait for the condition
             with self._queue.all_tasks_done:
                 self._queue.all_tasks_done.wait(timeout)
-                return self._queue.empty()
+                return not bool(self._queue.unfinished_tasks)
 
     def __run(self):
         """
