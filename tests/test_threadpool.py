@@ -370,7 +370,7 @@ class ThreadPoolTest(unittest.TestCase):
         self.pool.start()
 
         # Wait for the result
-        self.assertIs(future.result(1), result, "Invalid result")
+        self.assertIs(future.result(5), result, "Invalid result")
         self.assertTrue(future.done(), "Execution flag not updated")
 
     def testException(self):
