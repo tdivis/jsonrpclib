@@ -299,6 +299,19 @@ class ThreadPool(object):
         # Clear the stop event
         self._done_event.clear()
 
+        # Compute the number of threads to start to handle pending tasks
+        nb_pending_tasks = self._queue.qsize()
+        if nb_pending_tasks > self._max_threads:
+            nb_threads = self._max_threads
+        elif nb_pending_tasks < self._min_threads:
+            nb_threads = self._min_threads
+        else:
+            nb_threads = nb_pending_tasks
+
+        # Create the threads
+        for i in range(nb_threads):
+            self.__start_thread()
+
     def __start_thread(self):
         """
         Starts a new thread, if possible
@@ -342,15 +355,18 @@ class ThreadPool(object):
                 # There is already something in the queue
                 pass
 
-            # Join threads
-            for thread in self._threads:
-                while thread.is_alive():
-                    # Wait 3 seconds
-                    thread.join(3)
-                    if thread.is_alive():
-                        # Thread is still alive: something might be wrong
-                        self._logger.warning("Thread %s is still alive...",
-                                             thread.name)
+            # Copy the list of threads to wait for
+            threads = self._threads[:]
+
+        # Join threads outside the lock
+        for thread in threads:
+            while thread.is_alive():
+                # Wait 3 seconds
+                thread.join(3)
+                if thread.is_alive():
+                    # Thread is still alive: something might be wrong
+                    self._logger.warning("Thread %s is still alive...",
+                                         thread.name)
 
         # Clear storage
         del self._threads[:]
@@ -436,7 +452,9 @@ class ThreadPool(object):
                 if task is self._done_event:
                     # Stop event in the queue: get out
                     self._queue.task_done()
-                    return
+                    with self.__lock:
+                        self.__nb_threads -= 1
+                        return
             except queue.Empty:
                 # Nothing to do yet
                 pass
