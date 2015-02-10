@@ -413,11 +413,15 @@ class SimpleJSONRPCRequestHandler(xmlrpcserver.SimpleXMLRPCRequestHandler):
                 size_remaining -= len(chunks[-1])
             data = ''.join(chunks)
 
-            # Decode content
-            data = self.decode_request_content(data)
-            if data is None:
-                # Unknown encoding, response has been sent
-                return
+            try:
+                # Decode content
+                data = self.decode_request_content(data)
+                if data is None:
+                    # Unknown encoding, response has been sent
+                    return
+            except AttributeError:
+                # Available since Python 2.7
+                pass
 
             # Execute the method
             response = self.server._marshaled_dispatch(
