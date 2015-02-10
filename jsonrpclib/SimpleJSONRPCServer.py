@@ -406,16 +406,25 @@ class SimpleJSONRPCRequestHandler(xmlrpcserver.SimpleXMLRPCRequestHandler):
             chunks = []
             while size_remaining:
                 chunk_size = min(size_remaining, max_chunk_size)
-                chunks.append(utils.from_bytes(self.rfile.read(chunk_size)))
+                raw_chunk = self.rfile.read(chunk_size)
+                if not raw_chunk:
+                    break
+                chunks.append(utils.from_bytes(raw_chunk))
                 size_remaining -= len(chunks[-1])
             data = ''.join(chunks)
 
+            # Decode content
+            data = self.decode_request_content(data)
+            if data is None:
+                # Unknown encoding, response has been sent
+                return
+
             # Execute the method
-            response = self.server._marshaled_dispatch(data)
+            response = self.server._marshaled_dispatch(
+                data, getattr(self, '_dispatch', None), self.path)
 
             # No exception: send a 200 OK
             self.send_response(200)
-
         except:
             # Exception: send 500 Server Error
             self.send_response(500)
@@ -437,9 +446,8 @@ class SimpleJSONRPCRequestHandler(xmlrpcserver.SimpleXMLRPCRequestHandler):
         self.send_header("Content-type", config.content_type)
         self.send_header("Content-length", str(len(response)))
         self.end_headers()
-        self.wfile.write(response)
-        self.wfile.flush()
-        self.connection.shutdown(1)
+        if response:
+            self.wfile.write(response)
 
 # ------------------------------------------------------------------------------
 
