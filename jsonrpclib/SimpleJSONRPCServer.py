@@ -154,13 +154,13 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
         self.json_config = config
 
         # Notification thread pool
-        self.__pool = None
+        self.__notification_pool = None
 
-    def set_pool(self, thread_pool):
+    def set_notification_pool(self, thread_pool):
         """
         Sets the thread pool to use to handle notifications
         """
-        self.__pool = thread_pool
+        self.__notification_pool = thread_pool
 
     def _unmarshaled_dispatch(self, request, dispatch_method=None):
         """
@@ -281,12 +281,14 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
 
         # Test if this is a notification request
         is_notification = 'id' not in request or request['id'] in (None, '')
-        if is_notification and self.__pool is not None:
+        if is_notification and self.__notification_pool is not None:
             # Use the thread pool for notifications
             if dispatch_method is not None:
-                self.__pool.enqueue(dispatch_method, method, params)
+                self.__notification_pool.enqueue(dispatch_method,
+                                                 method, params)
             else:
-                self.__pool.enqueue(self._dispatch, method, params, config)
+                self.__notification_pool.enqueue(self._dispatch,
+                                                 method, params, config)
 
             # Return immediately
             return None
