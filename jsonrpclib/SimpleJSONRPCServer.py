@@ -32,6 +32,7 @@ __docformat__ = "restructuredtext en"
 from jsonrpclib import Fault
 import jsonrpclib.config
 import jsonrpclib.utils as utils
+import jsonrpclib.threadpool
 
 # Standard library
 import logging
@@ -509,6 +510,51 @@ class SimpleJSONRPCServer(socketserver.TCPServer, SimpleJSONRPCDispatcher):
             flags = fcntl.fcntl(self.fileno(), fcntl.F_GETFD)
             flags |= fcntl.FD_CLOEXEC
             fcntl.fcntl(self.fileno(), fcntl.F_SETFD, flags)
+
+# ------------------------------------------------------------------------------
+
+
+class PooledJSONRPCServer(SimpleJSONRPCServer, socketserver.ThreadingMixIn):
+    """
+    JSON-RPC server based on a thread pool
+    """
+    def __init__(self, addr, requestHandler=SimpleJSONRPCRequestHandler,
+                 logRequests=True, encoding=None, bind_and_activate=True,
+                 address_family=socket.AF_INET,
+                 config=jsonrpclib.config.DEFAULT, thread_pool=None):
+        """
+        Sets up the server and the dispatcher
+
+        :param addr: The server listening address
+        :param requestHandler: Custom request handler
+        :param logRequests: Flag to(de)activate requests logging
+        :param encoding: The dispatcher request encoding
+        :param bind_and_activate: If True, starts the server immediately
+        :param address_family: The server listening address family
+        :param config: A JSONRPClib Config instance
+        :param thread_pool: A ThreadPool object. The pool must be started.
+        """
+        # Normalize the thread pool
+        if thread_pool is None:
+            # Start a thread pool with  30 threads max, 0 thread min
+            thread_pool = jsonrpclib.threadpool.ThreadPool(
+                30, 0, logname="PooledJSONRPCServer")
+            thread_pool.start()
+
+        # Store the thread pool
+        self.__request_pool = thread_pool
+
+        # Prepare the server
+        SimpleJSONRPCServer.__init__(self, addr, requestHandler, logRequests,
+                                     encoding, bind_and_activate,
+                                     address_family, config)
+
+    def process_request(self, request, client_address):
+        """
+        Handle a client request: queue it in the thread pool
+        """
+        self.__request_pool.enqueue(self.process_request_thread,
+                                    (request, client_address))
 
 # ------------------------------------------------------------------------------
 
