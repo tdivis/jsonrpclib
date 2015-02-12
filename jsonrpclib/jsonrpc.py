@@ -264,9 +264,6 @@ class TransportMixIn(object):
     # for Python 2.7 support
     _connection = None
 
-    # Additional headers: list of dictionaries
-    additional_headers = []
-
     # List of non-overridable headers
     # Use the configuration to change the content-type
     readonly_headers = ('content-length', 'content-type')
@@ -285,6 +282,9 @@ class TransportMixIn(object):
 
         # Set up the user agent
         self.user_agent = config.user_agent
+
+        # Additional headers: list of dictionaries
+        self.additional_headers = []
 
     def push_headers(self, headers):
         """
