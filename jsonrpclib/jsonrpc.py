@@ -790,6 +790,7 @@ class Fault(object):
         :param message: Associated message
         :param rpcid: Request ID
         :param config: A JSONRPClib Config instance
+        :param data: Extra information added to an error description
         """
         self.faultCode = code
         self.faultString = message
@@ -803,7 +804,8 @@ class Fault(object):
 
         :returns: A {'code', 'message'} dictionary
         """
-        return {'code': self.faultCode, 'message': self.faultString, 'data': self.data}
+        return {'code': self.faultCode, 'message': self.faultString,
+                'data': self.data}
 
     def response(self, rpcid=None, version=None):
         """
