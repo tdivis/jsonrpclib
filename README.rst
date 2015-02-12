@@ -35,7 +35,7 @@ Services, but it is **not** a Pelix specific implementation.
   the SimpleJSONRPCDispatcher, to use a custom dispatcher.
   This allows to use this package by Pelix Remote Services.
 * It can use thread pools to control the number of threads spawned to handle
-  notification requests and clients connexions.
+  notification requests and clients connections.
 * The modifications added in other forks of this project have been added:
 
   * From https://github.com/drdaeman/jsonrpclib:
