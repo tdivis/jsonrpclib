@@ -782,7 +782,7 @@ class Fault(object):
     JSON-RPC error class
     """
     def __init__(self, code=-32000, message='Server error', rpcid=None,
-                 config=jsonrpclib.config.DEFAULT):
+                 config=jsonrpclib.config.DEFAULT, data=None):
         """
         Sets up the error description
 
@@ -795,6 +795,7 @@ class Fault(object):
         self.faultString = message
         self.rpcid = rpcid
         self.config = config
+        self.data = data
 
     def error(self):
         """
@@ -802,7 +803,7 @@ class Fault(object):
 
         :returns: A {'code', 'message'} dictionary
         """
-        return {'code': self.faultCode, 'message': self.faultString}
+        return {'code': self.faultCode, 'message': self.faultString, 'data': self.data}
 
     def response(self, rpcid=None, version=None):
         """
@@ -923,7 +924,7 @@ class Payload(object):
 
         return response
 
-    def error(self, code=-32000, message='Server error.'):
+    def error(self, code=-32000, message='Server error.', data=None):
         """
         Prepares an error dictionary
 
@@ -937,6 +938,8 @@ class Payload(object):
         else:
             error['result'] = None
         error['error'] = {'code': code, 'message': message}
+        if data is not None:
+            error['error']['data'] = data
         return error
 
 # ------------------------------------------------------------------------------
@@ -983,7 +986,7 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
     if isinstance(params, Fault):
         # Prepare an error dictionary
         # pylint: disable=E1103
-        return payload.error(params.faultCode, params.faultString)
+        return payload.error(params.faultCode, params.faultString, params.data)
 
     if not isinstance(methodname, utils.string_types) and not is_response:
         # Neither a request nor a response
