@@ -4,7 +4,7 @@
 Cached thread pool, inspired from Pelix/iPOPO Thread Pool
 
 :author: Thomas Calmant
-:copyright: Copyright 2014, isandlaTech
+:copyright: Copyright 2015, isandlaTech
 :license: Apache License 2.0
 :version: 0.2.4
 
