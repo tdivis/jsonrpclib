@@ -10,7 +10,7 @@ JSONRPClib (patched for Pelix)
 
 .. image:: https://coveralls.io/repos/tcalmant/jsonrpclib/badge.png?branch=master
     :target: https://coveralls.io/r/tcalmant/jsonrpclib?branch=master
-    
+
 
 This library is an implementation of the JSON-RPC specification.
 It supports both the original 1.0 specification, as well as the
@@ -34,6 +34,8 @@ Services, but it is **not** a Pelix specific implementation.
 * It is now possible to use the dispatch_method argument while extending
   the SimpleJSONRPCDispatcher, to use a custom dispatcher.
   This allows to use this package by Pelix Remote Services.
+* It can use thread pools to control the number of threads spawned to handle
+  notification requests and clients connexions.
 * The modifications added in other forks of this project have been added:
 
   * From https://github.com/drdaeman/jsonrpclib:
@@ -150,6 +152,8 @@ To start protect the server with SSL, use the following snippet:
    # Start the server
    server.serve_forever()
 
+Notification Thread Pool
+========================
 
 By default, notification calls are handled in the request handling thread.
 It is possible to use a thread pool to handle them, by giving it to the server
@@ -168,7 +172,7 @@ using the ``set_pool``method:
 
    # Setup the server
    server = SimpleJSONRPCServer(('localhost', 8080), config)
-   server.set_pool(pool)
+   server.set_notification_pool(pool)
 
    # Register methods
    server.register_function(pow)
@@ -180,8 +184,50 @@ using the ``set_pool``method:
    finally:
        # Stop the thread pool (let threads finish their current task)
        pool.stop()
-       server.set_pool(None)
+       server.set_notification_pool(None)
 
+
+Threaded server
+===============
+
+It is also possible to use a thread pool to handle clients requests, using the
+``PooledJSONRPCServer`` class.
+By default, this class uses pool of 0 to 30 threads. A custom pool can be given
+with the ``thread_pool`` parameter of the class constructor.
+
+The notification pool and the request pool are different: by default, a server
+with a request pool doesn't have a notification pool.
+
+.. code-block:: python
+
+   from jsonrpclib.SimpleJSONRPCServer import PooledJSONRPCServer
+   from jsonrpclib.threadpool import ThreadPool
+
+   # Setup the notification and request pools
+   nofif_pool = ThreadPool(max_threads=10, min_threads=0)
+   request_pool = ThreadPool(max_threads=50, min_threads=10)
+
+   # Don't forget to start them
+   nofif_pool.start()
+   request_pool.start()
+
+   # Setup the server
+   server = PooledJSONRPCServer(('localhost', 8080), config,
+                                thread_pool=request_pool)
+   server.set_notification_pool(nofif_pool)
+
+   # Register methods
+   server.register_function(pow)
+   server.register_function(lambda x,y: x+y, 'add')
+   server.register_function(lambda x: x, 'ping')
+
+   try:
+       server.serve_forever()
+   finally:
+       # Stop the thread pools (let threads finish their current task)
+       request_pool.stop()
+       nofif_pool.stop()
+       server.set_notification_pool(None)
 
 Client Usage
 ************
@@ -208,10 +254,10 @@ This is (obviously) taken from a console session.
    11
    {'key': 'value'}
    # Note that there are only two responses -- this is according to spec.
-   
+
    # Clean up
    >>> server('close')()
-   
+
    # Using client history
    >>> history = jsonrpclib.history.History()
    >>> server = jsonrpclib.ServerProxy('http://localhost:8080', history=history)
@@ -223,7 +269,7 @@ This is (obviously) taken from a console session.
    >>> print(history.response)
    {"id": "f682b956-c8e1-4506-9db4-29fe8bc9fcaa", "jsonrpc": "2.0",
     "result": 11}
-   
+
    # Clean up
    >>> server('close')()
 
