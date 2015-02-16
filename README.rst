@@ -152,12 +152,13 @@ To start protect the server with SSL, use the following snippet:
    # Start the server
    server.serve_forever()
 
+
 Notification Thread Pool
 ========================
 
 By default, notification calls are handled in the request handling thread.
 It is possible to use a thread pool to handle them, by giving it to the server
-using the ``set_pool``method:
+using the ``set_notification_pool()`` method:
 
 .. code-block:: python
 
