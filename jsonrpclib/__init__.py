@@ -6,7 +6,7 @@ Aliases to ease access to jsonrpclib classes
 :authors: Josh Marshall, Thomas Calmant
 :copyright: Copyright 2015, isandlaTech
 :license: Apache License 2.0
-:version: 0.2.4
+:version: 0.2.5
 
 ..
 
