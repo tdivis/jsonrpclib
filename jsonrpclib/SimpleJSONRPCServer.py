@@ -562,7 +562,7 @@ class PooledJSONRPCServer(SimpleJSONRPCServer, socketserver.ThreadingMixIn):
         Handle a client request: queue it in the thread pool
         """
         self.__request_pool.enqueue(self.process_request_thread,
-                                    (request, client_address))
+                                    request, client_address)
 
 # ------------------------------------------------------------------------------
 
