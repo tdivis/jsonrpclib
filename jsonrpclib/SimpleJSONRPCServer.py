@@ -564,6 +564,13 @@ class PooledJSONRPCServer(SimpleJSONRPCServer, socketserver.ThreadingMixIn):
         self.__request_pool.enqueue(self.process_request_thread,
                                     request, client_address)
 
+    def server_close(self):
+        """
+        Clean up the server
+        """
+        SimpleJSONRPCServer.server_close(self)
+        self.__request_pool.stop()
+
 # ------------------------------------------------------------------------------
 
 
