@@ -42,13 +42,16 @@ class LocalClasses(dict):
     """
     Associates local classes with their names (used in the jsonclass module)
     """
-    def add(self, cls):
+    def add(self, cls, name=None):
         """
         Stores a local class
 
         :param cls: A class
+        :param name: Custom name used in the __jsonclass__ attribute
         """
-        self[cls.__name__] = cls
+        if not name:
+            name = cls.__name__
+        self[name] = cls
 
 # ------------------------------------------------------------------------------
 
@@ -127,9 +130,12 @@ class Config(object):
 
         :return: A shallow copy of this configuration
         """
-        return Config(self.version, self.content_type, self.user_agent,
-                      self.use_jsonclass, self.serialize_method,
-                      self.ignore_attribute, self.serialize_handlers)
+        new_config = Config(self.version, self.content_type, self.user_agent,
+                            self.use_jsonclass, self.serialize_method,
+                            self.ignore_attribute, None)
+        new_config.classes = self.classes.copy()
+        new_config.serialize_handlers = self.serialize_handlers.copy()
+        return new_config
 
 # Default configuration
 DEFAULT = Config()
