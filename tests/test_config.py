@@ -10,7 +10,10 @@ Tests the Config class
 from jsonrpclib.config import Config
 
 # Standard library
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 # ------------------------------------------------------------------------------
 
