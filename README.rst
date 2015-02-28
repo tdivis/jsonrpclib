@@ -7,8 +7,7 @@ JSONRPClib (patched for Pelix)
 .. image:: https://travis-ci.org/tcalmant/jsonrpclib.svg?branch=master
     :target: https://travis-ci.org/tcalmant/jsonrpclib
 
-
-.. image:: https://coveralls.io/repos/tcalmant/jsonrpclib/badge.png?branch=master
+.. image:: https://coveralls.io/repos/tcalmant/jsonrpclib/badge.svg?branch=master
     :target: https://coveralls.io/r/tcalmant/jsonrpclib?branch=master
 
 
