@@ -482,8 +482,8 @@ class Transport(TransportMixIn, XMLTransport):
     """
     Mixed-in HTTP transport
     """
-    def __init__(self):
-        TransportMixIn.__init__(self)
+    def __init__(self, config):
+        TransportMixIn.__init__(self, config)
         XMLTransport.__init__(self)
 
 
@@ -491,8 +491,8 @@ class SafeTransport(TransportMixIn, XMLSafeTransport):
     """
     Mixed-in HTTPS transport
     """
-    def __init__(self):
-        TransportMixIn.__init__(self)
+    def __init__(self, config, context):
+        TransportMixIn.__init__(self, config, context)
         XMLSafeTransport.__init__(self)
 
 # ------------------------------------------------------------------------------
