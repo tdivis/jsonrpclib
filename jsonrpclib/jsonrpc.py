@@ -88,7 +88,6 @@ try:
     from xmlrpc.client import SafeTransport as XMLSafeTransport
     from xmlrpc.client import ServerProxy as XMLServerProxy
     from xmlrpc.client import _Method as XML_Method
-
 except ImportError:
     # Python 2
     # pylint: disable=F0401,E0611
@@ -98,6 +97,13 @@ except ImportError:
     from xmlrpclib import SafeTransport as XMLSafeTransport
     from xmlrpclib import ServerProxy as XMLServerProxy
     from xmlrpclib import _Method as XML_Method
+
+try:
+    # Check GZip support
+    import gzip
+except ImportError:
+    # Python can be built without zlib/gzip support
+    gzip = None
 
 # ------------------------------------------------------------------------------
 # JSON library import
@@ -335,6 +341,62 @@ class TransportMixIn(object):
 
         return additional_headers
 
+    def single_request(self, host, handler, request_body, verbose=0):
+        """
+        Send a complete request, and parse the response.
+
+        From xmlrpclib in Python 2.7
+
+        :param host: Target host.
+        :param handler: Target RPC handler.
+        :param request_body: JSON-RPC request body.
+        :param verbose: Debugging flag.
+        :return:Parsed response.
+        """
+        connection = self.make_connection(host)
+        try:
+            self.send_request(connection, handler, request_body, verbose)
+
+            response = connection.getresponse()
+            if response.status == 200:
+                self.verbose = verbose
+                return self.parse_response(response)
+        except:
+            # All unexpected errors leave connection in
+            # a strange state, so we clear it.
+            self.close()
+            raise
+
+        # Discard any response data and raise exception
+        if response.getheader("content-length", 0):
+            response.read()
+        raise ProtocolError(host + handler,
+                            response.status, response.reason,
+                            response.msg)
+
+    def send_request(self, connection, handler, request_body, debug):
+        """
+        Send HTTP request.
+
+        From xmlrpc.client in Python 3.4
+
+        :param connection: Connection handle.
+        :param handler: Target RPC handler (a path relative to host)
+        :param request_body: The JSON-RPC request body
+        :param debug: Enable debugging if debug is true.
+        :return: An HTTPConnection.
+        """
+        if debug:
+            connection.set_debuglevel(1)
+        if self.accept_gzip_encoding and gzip:
+            connection.putrequest("POST", handler, skip_accept_encoding=True)
+            connection.putheader("Accept-Encoding", "gzip")
+        else:
+            connection.putrequest("POST", handler)
+
+        self.send_content(connection, request_body)
+        return connection
+
     def send_content(self, connection, request_body):
         """
         Completes the request headers and sends the request body of a JSON-RPC
@@ -351,7 +413,11 @@ class TransportMixIn(object):
         connection.putheader("Content-Length", str(len(request_body)))
 
         # Emit additional headers here in order not to override content-length
-        self.emit_additional_headers(connection)
+        additional_headers = self.emit_additional_headers(connection)
+
+        # Add the user agent, if not overridden
+        if "user-agent" not in additional_headers:
+            connection.putheader("User-Agent", self.user_agent)
 
         connection.endheaders()
         if request_body:
