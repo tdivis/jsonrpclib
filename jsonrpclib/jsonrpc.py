@@ -72,7 +72,6 @@ import jsonrpclib.utils as utils
 
 # Standard library
 import contextlib
-import errno
 import logging
 import sys
 import uuid
@@ -83,7 +82,6 @@ _logger = logging.getLogger(__name__)
 try:
     # Python 3
     # pylint: disable=F0401,E0611
-    from http.client import BadStatusLine
     from urllib.parse import splittype
     from urllib.parse import splithost
     from xmlrpc.client import Transport as XMLTransport
@@ -93,7 +91,6 @@ try:
 except ImportError:
     # Python 2
     # pylint: disable=F0401,E0611
-    from httplib import BadStatusLine
     from urllib import splittype
     from urllib import splithost
     from xmlrpclib import Transport as XMLTransport
@@ -106,6 +103,7 @@ try:
     import gzip
 except ImportError:
     # Python can be built without zlib/gzip support
+    # pylint: disable=C0103
     gzip = None
 
 # ------------------------------------------------------------------------------
@@ -585,11 +583,7 @@ class ServerProxy(XMLServerProxy):
         """
         Closes the transport layer
         """
-        try:
-            self.__transport.close()
-        except AttributeError:
-            # Not available in Python 2.6
-            pass
+        self.__transport.close()
 
     def __call__(self, attr):
         """
