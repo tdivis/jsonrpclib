@@ -29,7 +29,7 @@ Josh Marshall, available at https://github.com/joshmarshall/jsonrpclib.
 The suffix *-pelix* only indicates that this version works with Pelix Remote
 Services, but it is **not** a Pelix specific implementation.
 
-* This version adds support for Python 3, staying compatible with Python 2.
+* This version adds support for Python 3, staying compatible with Python 2.7.
 * It is now possible to use the dispatch_method argument while extending
   the SimpleJSONRPCDispatcher, to use a custom dispatcher.
   This allows to use this package by Pelix Remote Services.
@@ -81,15 +81,12 @@ Requirements
 ************
 
 It supports ``cjson`` and ``simplejson``, and looks for the parsers in that
-order (searching first for ``cjson``, then for the *built-in* ``json`` in 2.6+,
+order (searching first for ``cjson``, then for the *built-in* ``json`` in 2.7,
 and then the ``simplejson`` external library).
 One of these must be installed to use this library, although if you have a
-standard distribution of 2.6+, you should already have one.
+standard distribution of 2.7, you should already have one.
 Keep in mind that ``cjson`` is supposed to be the quickest, I believe, so if
 you are going for full-on optimization you may want to pick it up.
-
-Since library uses ``contextlib`` module, you should have at least Python 2.5
-installed.
 
 
 Installation

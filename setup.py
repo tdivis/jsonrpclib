@@ -52,7 +52,7 @@ setup(
     url="http://github.com/tcalmant/jsonrpclib/",
     description=
     "This project is an implementation of the JSON-RPC v2.0 specification "
-    "(backwards-compatible) as a client library, for Python 2.6+ and Python 3."
+    "(backwards-compatible) as a client library, for Python 2.7 and Python 3."
     "This version is a fork of jsonrpclib by Josh Marshall, "
     "usable with Pelix remote services.",
     long_description=open("README.rst").read(),
@@ -62,7 +62,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.0',
