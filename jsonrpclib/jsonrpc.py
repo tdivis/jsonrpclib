@@ -311,12 +311,18 @@ class TransportMixIn(object):
         Puts headers as is in the request, filtered read only headers
 
         :param connection: The request connection
+        :return: The dictionary of headers added to the connection
         """
         additional_headers = {}
 
         # Prepare the merged dictionary
         for headers in self.additional_headers:
             additional_headers.update(headers)
+
+        # Normalize keys and values
+        additional_headers = dict(
+            (str(key).lower(), str(value))
+            for key, value in additional_headers.items())
 
         # Remove forbidden keys
         for forbidden in self.readonly_headers:
@@ -325,10 +331,9 @@ class TransportMixIn(object):
         # Reversed order: in the case of multiple headers value definition,
         # the latest pushed has priority
         for key, value in additional_headers.items():
-            key = str(key)
-            if key.lower() not in self.readonly_headers:
-                # Only accept replaceable headers
-                connection.putheader(key, str(value))
+            connection.putheader(key, value)
+
+        return additional_headers
 
     def send_content(self, connection, request_body):
         """
