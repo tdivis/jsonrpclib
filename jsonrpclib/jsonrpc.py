@@ -72,6 +72,7 @@ import jsonrpclib.utils as utils
 
 # Standard library
 import contextlib
+import errno
 import logging
 import sys
 import uuid
@@ -82,6 +83,7 @@ _logger = logging.getLogger(__name__)
 try:
     # Python 3
     # pylint: disable=F0401,E0611
+    from http.client import BadStatusLine
     from urllib.parse import splittype
     from urllib.parse import splithost
     from xmlrpc.client import Transport as XMLTransport
@@ -91,6 +93,7 @@ try:
 except ImportError:
     # Python 2
     # pylint: disable=F0401,E0611
+    from httplib import BadStatusLine
     from urllib import splittype
     from urllib import splithost
     from xmlrpclib import Transport as XMLTransport
@@ -341,6 +344,33 @@ class TransportMixIn(object):
 
         return additional_headers
 
+    def request(self, host, handler, request_body, verbose=False):
+        """
+        Send a complete request, and parse the response.
+        Retry request if a cached connection has disconnected.
+
+        From xmlrpc.client in Python 3.4
+
+        :param host: Target host.
+        :param handler: Target RPC handler.
+        :param request_body: JSON-RPC request body.
+        :param verbose: Debugging flag.
+        :return: Parsed response.
+        """
+        # Retry request once if cached connection has gone cold
+        for i in (0, 1):
+            try:
+                return self.single_request(host, handler,
+                                           request_body, verbose)
+            except OSError as e:
+                if i or e.errno not in (errno.ECONNRESET, errno.ECONNABORTED,
+                                        errno.EPIPE):
+                    raise
+            except BadStatusLine:
+                # Close after we sent request
+                if i:
+                    raise
+
     def single_request(self, host, handler, request_body, verbose=0):
         """
         Send a complete request, and parse the response.
@@ -351,7 +381,7 @@ class TransportMixIn(object):
         :param handler: Target RPC handler.
         :param request_body: JSON-RPC request body.
         :param verbose: Debugging flag.
-        :return:Parsed response.
+        :return: Parsed response.
         """
         connection = self.make_connection(host)
         try:
@@ -374,7 +404,7 @@ class TransportMixIn(object):
                             response.status, response.reason,
                             response.msg)
 
-    def send_request(self, connection, handler, request_body, debug):
+    def send_request(self, connection, handler, request_body, debug=0):
         """
         Send HTTP request.
 
