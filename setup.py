@@ -34,8 +34,6 @@ __docformat__ = "restructuredtext en"
 
 # ------------------------------------------------------------------------------
 
-import sys
-
 try:
     from setuptools import setup
 except ImportError:
