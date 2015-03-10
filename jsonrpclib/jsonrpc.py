@@ -328,7 +328,7 @@ class TransportMixIn(object):
             key = str(key)
             if key.lower() not in self.readonly_headers:
                 # Only accept replaceable headers
-                connection.putheader(str(key), str(value))
+                connection.putheader(key, str(value))
 
     def send_content(self, connection, request_body):
         """
