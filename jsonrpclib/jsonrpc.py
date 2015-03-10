@@ -344,32 +344,41 @@ class TransportMixIn(object):
 
         return additional_headers
 
-    def request(self, host, handler, request_body, verbose=False):
-        """
-        Send a complete request, and parse the response.
-        Retry request if a cached connection has disconnected.
+    if sys.version_info[0:2] == (2, 6):
+        # Python 2.6 compatibility
+        def request(self, host, handler, request_body, verbose=False):
+            """
+            Send a complete request, and parse the response.
+            Retry request if a cached connection has disconnected.
 
-        From xmlrpc.client in Python 3.4
+            From xmlrpc.client in Python 3.4
 
-        :param host: Target host.
-        :param handler: Target RPC handler.
-        :param request_body: JSON-RPC request body.
-        :param verbose: Debugging flag.
-        :return: Parsed response.
-        """
-        # Retry request once if cached connection has gone cold
-        for i in (0, 1):
-            try:
-                return self.single_request(host, handler,
-                                           request_body, verbose)
-            except OSError as e:
-                if i or e.errno not in (errno.ECONNRESET, errno.ECONNABORTED,
-                                        errno.EPIPE):
-                    raise
-            except BadStatusLine:
-                # Close after we sent request
-                if i:
-                    raise
+            :param host: Target host.
+            :param handler: Target RPC handler.
+            :param request_body: JSON-RPC request body.
+            :param verbose: Debugging flag.
+            :return: Parsed response.
+            """
+            # Retry request once if cached connection has gone cold
+            for i in (0, 1):
+                try:
+                    return self.single_request(host, handler,
+                                               request_body, verbose)
+                except OSError as e:
+                    if i or e.errno not in (errno.ECONNRESET,
+                                            errno.ECONNABORTED, errno.EPIPE):
+                        raise
+                except BadStatusLine:
+                    # Close after we sent request
+                    if i:
+                        raise
+
+        def close(self):
+            """
+            Clear any cached connection object.
+            Used in the event of socket errors.
+            """
+            pass
 
     def single_request(self, host, handler, request_body, verbose=0):
         """
@@ -394,6 +403,7 @@ class TransportMixIn(object):
         except:
             # All unexpected errors leave connection in
             # a strange state, so we clear it.
+            connection.close()
             self.close()
             raise
 
