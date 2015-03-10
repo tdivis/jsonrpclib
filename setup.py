@@ -69,6 +69,5 @@ setup(
         'Programming Language :: Python :: 3.1',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'],
-    tests_require=['unittest2'] if sys.version_info < (2, 7) else []
+        'Programming Language :: Python :: 3.4']
 )
