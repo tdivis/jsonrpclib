@@ -295,6 +295,10 @@ class TransportMixIn(object):
         # Additional headers: list of dictionaries
         self.additional_headers = []
 
+        # Fields missing from Python 2.6
+        self.accept_gzip_encoding = True
+        self.verbose = False
+
     def push_headers(self, headers):
         """
         Adds a dictionary of headers to the additional headers list
@@ -478,14 +482,18 @@ class Transport(TransportMixIn, XMLTransport):
     """
     Mixed-in HTTP transport
     """
-    pass
+    def __init__(self):
+        TransportMixIn.__init__(self)
+        XMLTransport.__init__(self)
 
 
 class SafeTransport(TransportMixIn, XMLSafeTransport):
     """
     Mixed-in HTTPS transport
     """
-    pass
+    def __init__(self):
+        TransportMixIn.__init__(self)
+        XMLSafeTransport.__init__(self)
 
 # ------------------------------------------------------------------------------
 
