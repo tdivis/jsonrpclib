@@ -52,10 +52,13 @@ class HeadersTests(unittest.TestCase):
         self.server.stop()
 
     @contextlib.contextmanager
-    def captured_headers(self):
+    def captured_headers(self, check_duplicates=True):
         """
         Captures the request headers. Yields the {header : value} dictionary,
         where keys are in lower case.
+
+        :param check_duplicates: If True, raises an error if a header appears
+                                 twice
         """
         # Redirect the standard output, to catch jsonrpclib verbose messages
         stdout = sys.stdout
@@ -82,7 +85,10 @@ class HeadersTests(unittest.TestCase):
         raw_headers = request_line.splitlines()[1:-1]
         raw_headers = map(lambda h: re.split(r":\s?", h, 1), raw_headers)
         for header, value in raw_headers:
-            headers[header.lower()] = value
+            header = header.lower()
+            if check_duplicates and header in headers:
+                raise KeyError("Header defined twice: {0}".format(header))
+            headers[header] = value
 
     def test_should_extract_headers(self):
         # given
@@ -135,7 +141,7 @@ class HeadersTests(unittest.TestCase):
             headers={'User-Agent': 'jsonrpclib test', 'Host': 'example.com'})
 
         # when
-        with self.captured_headers() as headers:
+        with self.captured_headers(False) as headers:
             response = client.ping()
             self.assertTrue(response)
 
