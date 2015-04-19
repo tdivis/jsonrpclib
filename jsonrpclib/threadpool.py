@@ -116,7 +116,7 @@ class EventData(object):
         :return: True if the event as been set, else False
         """
         # The 'or' part is for Python 2.6
-        result = self.__event.wait(timeout)
+        result = self.__event.wait(timeout) or self.__event.is_set()
         # pylint: disable=E0702
         # Pylint seems to miss the "is None" check below
         if self.__exception is None:
