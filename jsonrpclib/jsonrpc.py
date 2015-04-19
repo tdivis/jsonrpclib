@@ -93,10 +93,18 @@ except ImportError:
     # pylint: disable=F0401,E0611
     from urllib import splittype
     from urllib import splithost
-    from xmlrpclib import Transport as XMLTransport
-    from xmlrpclib import SafeTransport as XMLSafeTransport
-    from xmlrpclib import ServerProxy as XMLServerProxy
-    from xmlrpclib import _Method as XML_Method
+    if sys.version_info[:2] > (2, 6):
+        # Python 2.7 (and maybe 2.8)
+        from xmlrpclib import Transport as XMLTransport
+        from xmlrpclib import SafeTransport as XMLSafeTransport
+        from xmlrpclib import ServerProxy as XMLServerProxy
+        from xmlrpclib import _Method as XML_Method
+    else:
+        # Python 2.6
+        from jsonrpclib.backport.xmlrpclib import Transport as XMLTransport
+        from jsonrpclib.backport.xmlrpclib import SafeTransport as XMLSafeTransport
+        from jsonrpclib.backport.xmlrpclib import ServerProxy as XMLServerProxy
+        from jsonrpclib.backport.xmlrpclib import _Method as XML_Method
 
 try:
     # Check GZip support
