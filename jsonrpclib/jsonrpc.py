@@ -650,6 +650,12 @@ class _Method(XML_Method):
             return self.__name
         return _Method(self.__send, "{0}.{1}".format(self.__name, name))
 
+    def __repr__(self):
+        return "<%s %r>" % (
+            self.__class__,  # Must use __class__ here because the base class is old-style.
+            self.__name,
+        )
+
 
 class _Notify(object):
     """
