@@ -40,17 +40,18 @@ import sys
 
 if sys.version_info[0] < 3:
     # Python 2
+    # pylint: disable=E1101
     import types
     try:
-        string_types = (
+        STRING_TYPES = (
             types.StringType,
             types.UnicodeType
         )
     except NameError:
         # Python built without unicode support
-        string_types = (types.StringType,)
+        STRING_TYPES = (types.StringType,)
 
-    numeric_types = (
+    NUMERIC_TYPES = (
         types.IntType,
         types.LongType,
         types.FloatType
@@ -60,6 +61,7 @@ if sys.version_info[0] < 3:
         """
         Converts the given string into bytes
         """
+        # pylint: disable=E0602
         if type(string) is unicode:
             return str(string)
         return string
@@ -74,12 +76,13 @@ if sys.version_info[0] < 3:
 
 else:
     # Python 3
-    string_types = (
+    # pylint: disable=E1101
+    STRING_TYPES = (
         bytes,
         str
     )
 
-    numeric_types = (
+    NUMERIC_TYPES = (
         int,
         float
     )
@@ -108,15 +111,15 @@ DictType = dict
 ListType = list
 TupleType = tuple
 
-iterable_types = (
+ITERABLE_TYPES = (
     list,
     set, frozenset,
     tuple
 )
 
-value_types = (
+VALUE_TYPES = (
     bool,
     type(None)
 )
 
-primitive_types = string_types + numeric_types + value_types
+PRIMITIVE_TYPES = STRING_TYPES + NUMERIC_TYPES + VALUE_TYPES

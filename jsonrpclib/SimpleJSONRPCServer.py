@@ -121,7 +121,7 @@ def validate_request(request, json_config):
     params = request.get('params')
     param_types = (utils.ListType, utils.DictType, utils.TupleType)
 
-    if not method or not isinstance(method, utils.string_types) or \
+    if not method or not isinstance(method, utils.STRING_TYPES) or \
             not isinstance(params, param_types):
         # Invalid type of method name or parameters
         fault = Fault(-32600, 'Invalid request parameters or method.',

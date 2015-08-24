@@ -131,14 +131,12 @@ try:
         to a Python object, using cjson.
         """
         return cjson.decode(json_string)
-
 except ImportError:
     # pylint: disable=F0401,E0611
     # Use json or simplejson
     try:
         import json
         _logger.debug("Using json as JSON library")
-
     except ImportError:
         try:
             import simplejson as json
@@ -156,7 +154,6 @@ except ImportError:
             """
             # Python 2 (explicit encoding)
             return json.dumps(obj, encoding=encoding)
-
     else:
         # Python 3
         def jdumps(obj, encoding='utf-8'):
@@ -223,7 +220,8 @@ class JSONParser(object):
         """
         self.target.feed(data)
 
-    def close(self):
+    @staticmethod
+    def close():
         """
         Does nothing
         """
@@ -428,7 +426,8 @@ class TransportMixIn(object):
         if request_body:
             connection.send(request_body)
 
-    def getparser(self):
+    @staticmethod
+    def getparser():
         """
         Create an instance of the parser, and attach it to an unmarshalling
         object. Return both objects.
@@ -594,7 +593,6 @@ class ServerProxy(XMLServerProxy):
         """
         if attr == "close":
             return self.__close
-
         elif attr == "transport":
             return self.__transport
 
@@ -763,7 +761,8 @@ class MultiCallIterator(object):
         """
         self.results = results
 
-    def __get_result(self, item):
+    @staticmethod
+    def __get_result(item):
         """
         Checks for error and returns the "real" result stored in a MultiCall
         result.
@@ -958,7 +957,7 @@ class Payload(object):
         :param params: Method parameters
         :return: A JSON-RPC request dictionary
         """
-        if not isinstance(method, utils.string_types):
+        if not isinstance(method, utils.STRING_TYPES):
             raise ValueError('Method name must be a string.')
 
         if not self.id:
@@ -1056,7 +1055,7 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
     if is_response:
         valid_params.append(type(None))
 
-    if isinstance(methodname, utils.string_types) and \
+    if isinstance(methodname, utils.STRING_TYPES) and \
             not isinstance(params, tuple(valid_params)):
         """
         If a method, and params are not in a listish or a Fault,
@@ -1073,7 +1072,7 @@ def dump(params=None, methodname=None, rpcid=None, version=None,
         # pylint: disable=E1103
         return payload.error(params.faultCode, params.faultString, params.data)
 
-    if not isinstance(methodname, utils.string_types) and not is_response:
+    if not isinstance(methodname, utils.STRING_TYPES) and not is_response:
         # Neither a request nor a response
         raise ValueError('Method name must be a string, or is_response '
                          'must be set to True.')

@@ -45,8 +45,8 @@ import re
 # ------------------------------------------------------------------------------
 
 # Supported transmitted code
-SUPPORTED_TYPES = (utils.DictType,) + utils.iterable_types \
-    + utils.primitive_types
+SUPPORTED_TYPES = (utils.DictType,) + utils.ITERABLE_TYPES \
+    + utils.PRIMITIVE_TYPES
 
 # Regex of invalid module characters
 INVALID_MODULE_CHARS = r'[^a-zA-Z0-9\_\.]'
@@ -134,11 +134,11 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
                               ignore, config)
 
     # Primitive
-    if isinstance(obj, utils.primitive_types):
+    if isinstance(obj, utils.PRIMITIVE_TYPES):
         return obj
 
     # Iterative
-    elif isinstance(obj, utils.iterable_types):
+    elif isinstance(obj, utils.ITERABLE_TYPES):
         # List, set or tuple
         return [dump(item, serialize_method, ignore_attribute, ignore, config)
                 for item in obj]
@@ -207,11 +207,11 @@ def load(obj, classes=None):
     :return: The loaded object
     """
     # Primitive
-    if isinstance(obj, utils.primitive_types):
+    if isinstance(obj, utils.PRIMITIVE_TYPES):
         return obj
 
     # List, set or tuple
-    elif isinstance(obj, utils.iterable_types):
+    elif isinstance(obj, utils.ITERABLE_TYPES):
         # This comes from a JSON parser, so it can only be a list...
         return [load(entry) for entry in obj]
 
@@ -234,7 +234,6 @@ def load(obj, classes=None):
 
     # Load the class
     json_module_parts = json_module_clean.split('.')
-    json_class = None
     if classes and len(json_module_parts) == 1:
         # Local class name -- probably means it won't work
         try:
@@ -242,7 +241,6 @@ def load(obj, classes=None):
         except KeyError:
             raise TranslationError('Unknown class or module {0}.'
                                    .format(json_module_parts[0]))
-
     else:
         # Module + class
         json_class_name = json_module_parts.pop()
@@ -262,21 +260,18 @@ def load(obj, classes=None):
                                    .format(json_module_tree, json_class_name))
 
     # Create the object
-    new_obj = None
     if isinstance(params, utils.ListType):
         try:
             new_obj = json_class(*params)
         except TypeError as ex:
             raise TranslationError("Error instantiating {0}: {1}"
                                    .format(json_class.__name__, ex))
-
     elif isinstance(params, utils.DictType):
         try:
             new_obj = json_class(**params)
         except TypeError as ex:
             raise TranslationError("Error instantiating {0}: {1}"
                                    .format(json_class.__name__, ex))
-
     else:
         raise TranslationError("Constructor args must be a dict or a list, "
                                "not {0}".format(type(params).__name__))
