@@ -11,11 +11,11 @@ JSONRPClib (patched for Pelix)
 
 .. image:: https://travis-ci.org/tcalmant/jsonrpclib.svg?branch=master
     :target: https://travis-ci.org/tcalmant/jsonrpclib
-     :alt: Travis-CI status
+    :alt: Travis-CI status
 
 .. image:: https://coveralls.io/repos/tcalmant/jsonrpclib/badge.svg?branch=master
-     :target: https://coveralls.io/r/tcalmant/jsonrpclib?branch=master
-     :alt: Coveralls status
+    :target: https://coveralls.io/r/tcalmant/jsonrpclib?branch=master
+    :alt: Coveralls status
 
 This library is an implementation of the JSON-RPC specification.
 It supports both the original 1.0 specification, as well as the
