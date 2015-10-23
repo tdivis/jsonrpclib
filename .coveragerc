@@ -3,5 +3,3 @@ source = jsonrpclib/
 
 [report]
 include = jsonrpclib/*
-exclude = *
-
