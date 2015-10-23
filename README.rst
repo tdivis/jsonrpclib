@@ -1,15 +1,21 @@
 JSONRPClib (patched for Pelix)
 ##############################
 
-.. image:: https://pypip.in/license/jsonrpclib-pelix/badge.svg
+.. image:: https://img.shields.io/pypi/v/jsonrpclib-pelix.svg
     :target: https://pypi.python.org/pypi/jsonrpclib-pelix/
+    :alt: Latest Version
+
+.. image:: https://img.shields.io/pypi/l/jsonrpclib-pelix.svg
+    :target: https://pypi.python.org/pypi/jsonrpclib-pelix/
+    :alt: License
 
 .. image:: https://travis-ci.org/tcalmant/jsonrpclib.svg?branch=master
     :target: https://travis-ci.org/tcalmant/jsonrpclib
+     :alt: Travis-CI status
 
 .. image:: https://coveralls.io/repos/tcalmant/jsonrpclib/badge.svg?branch=master
-    :target: https://coveralls.io/r/tcalmant/jsonrpclib?branch=master
-
+     :target: https://coveralls.io/r/tcalmant/jsonrpclib?branch=master
+     :alt: Coveralls status
 
 This library is an implementation of the JSON-RPC specification.
 It supports both the original 1.0 specification, as well as the
