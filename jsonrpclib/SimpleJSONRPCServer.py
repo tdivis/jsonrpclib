@@ -568,6 +568,7 @@ class PooledJSONRPCServer(SimpleJSONRPCServer, socketserver.ThreadingMixIn):
         """
         Clean up the server
         """
+        SimpleJSONRPCServer.shutdown(self)
         SimpleJSONRPCServer.server_close(self)
         self.__request_pool.stop()
 
