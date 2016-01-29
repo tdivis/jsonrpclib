@@ -359,6 +359,7 @@ class TransportMixIn(object):
         connection = self.make_connection(host)
         try:
             self.send_request(connection, handler, request_body, verbose)
+            self.send_content(connection, request_body)
 
             response = connection.getresponse()
             if response.status == 200:
@@ -397,7 +398,6 @@ class TransportMixIn(object):
         else:
             connection.putrequest("POST", handler)
 
-        self.send_content(connection, request_body)
         return connection
 
     def send_content(self, connection, request_body):
