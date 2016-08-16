@@ -324,6 +324,16 @@ class TransportMixIn(object):
         """
         additional_headers = {}
 
+        # Setup extra headers
+        # (list of tuples, inherited from xmlrpclib.client.Transport)
+        # Authentication headers are stored there
+        try:
+            for (key, value) in self._extra_headers:
+                additional_headers[key] = value
+        except AttributeError:
+            # Not available this version of Python (should not happen)
+            pass
+
         # Prepare the merged dictionary
         for headers in self.additional_headers:
             additional_headers.update(headers)
