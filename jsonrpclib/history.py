@@ -72,7 +72,6 @@ class History(object):
         """
         try:
             return self.requests[-1]
-
         except IndexError:
             return None
 
@@ -83,7 +82,6 @@ class History(object):
         """
         try:
             return self.responses[-1]
-
         except IndexError:
             return None
 

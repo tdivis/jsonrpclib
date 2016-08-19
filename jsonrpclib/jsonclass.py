@@ -25,22 +25,22 @@ The serialization module
     limitations under the License.
 """
 
+# Standard library
+import inspect
+import re
+
+# Local package
+import jsonrpclib.config
+import jsonrpclib.utils as utils
+
+# ------------------------------------------------------------------------------
+
 # Module version
 __version_info__ = (0, 2, 8)
 __version__ = ".".join(str(x) for x in __version_info__)
 
 # Documentation strings format
 __docformat__ = "restructuredtext en"
-
-# ------------------------------------------------------------------------------
-
-# Local package
-import jsonrpclib.config
-import jsonrpclib.utils as utils
-
-# Standard library
-import inspect
-import re
 
 # ------------------------------------------------------------------------------
 

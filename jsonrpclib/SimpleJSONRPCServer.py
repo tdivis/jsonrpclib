@@ -26,28 +26,11 @@ CGI request handler.
     limitations under the License.
 """
 
-# Module version
-__version_info__ = (0, 2, 8)
-__version__ = ".".join(str(x) for x in __version_info__)
-
-# Documentation strings format
-__docformat__ = "restructuredtext en"
-
-# ------------------------------------------------------------------------------
-# Local modules
-from jsonrpclib import Fault
-import jsonrpclib.config
-import jsonrpclib.utils as utils
-import jsonrpclib.threadpool
-
 # Standard library
 import logging
 import socket
 import sys
 import traceback
-
-# Prepare the logger
-_logger = logging.getLogger(__name__)
 
 try:
     # Python 3
@@ -67,6 +50,24 @@ except ImportError:
     # Other systems
     # pylint: disable=C0103
     fcntl = None
+
+# Local modules
+from jsonrpclib import Fault
+import jsonrpclib.config
+import jsonrpclib.utils as utils
+import jsonrpclib.threadpool
+
+# ------------------------------------------------------------------------------
+
+# Module version
+__version_info__ = (0, 2, 8)
+__version__ = ".".join(str(x) for x in __version_info__)
+
+# Documentation strings format
+__docformat__ = "restructuredtext en"
+
+# Prepare the logger
+_logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
 

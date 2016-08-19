@@ -57,33 +57,16 @@ See https://github.com/tcalmant/jsonrpclib for more info.
     limitations under the License.
 """
 
-# Module version
-__version_info__ = (0, 2, 8)
-__version__ = ".".join(str(x) for x in __version_info__)
-
-# Documentation strings format
-__docformat__ = "restructuredtext en"
-
-# ------------------------------------------------------------------------------
-
-# Library includes
-import jsonrpclib.config
-import jsonrpclib.utils as utils
-
 # Standard library
 import contextlib
 import logging
 import sys
 import uuid
 
-# Create the logger
-_logger = logging.getLogger(__name__)
-
 try:
     # Python 3
     # pylint: disable=F0401,E0611
-    from urllib.parse import splittype
-    from urllib.parse import splithost
+    from urllib.parse import splittype, splithost
     from xmlrpc.client import Transport as XMLTransport
     from xmlrpc.client import SafeTransport as XMLSafeTransport
     from xmlrpc.client import ServerProxy as XMLServerProxy
@@ -91,8 +74,7 @@ try:
 except ImportError:
     # Python 2
     # pylint: disable=F0401,E0611
-    from urllib import splittype
-    from urllib import splithost
+    from urllib import splittype, splithost
     from xmlrpclib import Transport as XMLTransport
     from xmlrpclib import SafeTransport as XMLSafeTransport
     from xmlrpclib import ServerProxy as XMLServerProxy
@@ -106,11 +88,25 @@ except ImportError:
     # pylint: disable=C0103
     gzip = None
 
+# Library includes
+import jsonrpclib.config
+import jsonrpclib.jsonclass as jsonclass
+import jsonrpclib.utils as utils
+
+# ------------------------------------------------------------------------------
+
+# Module version
+__version_info__ = (0, 2, 8)
+__version__ = ".".join(str(x) for x in __version_info__)
+
+# Documentation strings format
+__docformat__ = "restructuredtext en"
+
+# Create the logger
+_logger = logging.getLogger(__name__)
+
 # ------------------------------------------------------------------------------
 # JSON library import
-
-# JSON class serialization
-from jsonrpclib import jsonclass
 
 try:
     # pylint: disable=F0401,E0611
