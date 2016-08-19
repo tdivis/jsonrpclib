@@ -3,13 +3,13 @@
 """
 The configuration module.
 
-:copyright: Copyright 2015, isandlaTech
+:copyright: Copyright 2016, Thomas Calmant
 :license: Apache License 2.0
-:version: 0.2.7
+:version: 0.2.8
 
 ..
 
-    Copyright 2015 isandlaTech
+    Copyright 2016 Thomas Calmant
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ The configuration module.
 """
 
 # Module version
-__version_info__ = (0, 2, 7)
+__version_info__ = (0, 2, 8)
 __version__ = ".".join(str(x) for x in __version_info__)
 
 # Documentation strings format
