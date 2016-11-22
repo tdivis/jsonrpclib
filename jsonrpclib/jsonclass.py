@@ -167,8 +167,9 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
         params, attrs = serialize()
         return_obj['__jsonclass__'].append(params)
         return_obj.update(attrs)
-        return return_obj
-
+    elif utils.is_enum(obj):
+        # Add parameters for enumerations
+        return_obj['__jsonclass__'].append([obj.value])
     else:
         # Otherwise, try to figure it out
         # Obviously, we can't assume to know anything about the
@@ -192,7 +193,8 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
                 attrs[attr_name] = dump(attr_value, serialize_method,
                                         ignore_attribute, ignore, config)
         return_obj.update(attrs)
-        return return_obj
+
+    return return_obj
 
 # ------------------------------------------------------------------------------
 
