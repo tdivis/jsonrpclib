@@ -20,6 +20,16 @@ try:
 except ImportError:
     import unittest
 
+try:
+    import enum
+
+
+    class Color(enum.Enum):
+        BLUE = 1
+        RED = 2
+except ImportError:
+    enum = None
+
 # ------------------------------------------------------------------------------
 
 
@@ -284,3 +294,28 @@ class SerializationTests(unittest.TestCase):
 
         # This should be a raw string
         self.assertEqual(custom_serialized, now.isoformat())
+
+    def test_enum(self):
+        """
+        Tests the serialization of enumerations
+        """
+        if enum is None:
+            self.skipTest("enum package not available.")
+
+        for data in (Color.BLUE, Color.RED):
+            # Serialization
+            enum_serialized = dump(data)
+            self.assertIn(
+                Color.__name__, enum_serialized['__jsonclass__'][0])
+            self.assertEqual(
+                data.value, enum_serialized['__jsonclass__'][1][0])
+
+            # Loading
+            result = load(enum_serialized)
+            self.assertEqual(data, result)
+
+        # Embedded
+        data = [Color.BLUE, Color.RED]
+        serialized = dump(data)
+        result = load(serialized)
+        self.assertListEqual(data, result)
