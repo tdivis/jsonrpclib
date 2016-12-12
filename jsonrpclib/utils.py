@@ -73,16 +73,6 @@ if sys.version_info[0] < 3:
         if type(data) is str:
             return data
         return str(data)
-
-
-    def is_enum(obj):
-        """
-        Checks if an object is from an enumeration class
-
-        :param obj: Object to test
-        :return: True if the object is an enumeration item
-        """
-        return isinstance(enum.Enum)
 else:
     # Python 3
     # pylint: disable=E1101
@@ -118,7 +108,6 @@ else:
 try:
     import enum
 
-
     def is_enum(obj):
         """
         Checks if an object is from an enumeration class
@@ -129,11 +118,11 @@ try:
         return isinstance(obj, enum.Enum)
 except ImportError:
     # Pre-Python 3.4
-    def is_enum(obj):
+    def is_enum(_):
         """
         Before Python 3.4, enumerations didn't exist.
 
-        :param obj: Object to test
+        :param _: Object to test
         :return: Always False
         """
         return False

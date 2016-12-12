@@ -49,9 +49,7 @@ class LocalClasses(dict):
         :param cls: A class
         :param name: Custom name used in the __jsonclass__ attribute
         """
-        if not name:
-            name = cls.__name__
-        self[name] = cls
+        self[name or cls.__name__] = cls
 
 # ------------------------------------------------------------------------------
 
@@ -100,8 +98,8 @@ class Config(object):
         # Default user agent
         if user_agent is None:
             user_agent = 'jsonrpclib/{0} (Python {1})'.format(
-                __version__, '.'.join(str(ver)
-                                      for ver in sys.version_info[0:3]))
+                __version__,
+                '.'.join(str(ver) for ver in sys.version_info[0:3]))
         self.user_agent = user_agent
 
         # The list of classes to use for jsonclass translation.

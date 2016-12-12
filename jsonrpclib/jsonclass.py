@@ -56,7 +56,7 @@ INVALID_MODULE_CHARS = r'[^a-zA-Z0-9\_\.]'
 
 class TranslationError(Exception):
     """
-    Unmarshaling exception
+    Unmarshalling exception
     """
     pass
 
@@ -145,9 +145,9 @@ def dump(obj, serialize_method=None, ignore_attribute=None, ignore=None,
 
     elif isinstance(obj, utils.DictType):
         # Dictionary
-        return dict((key, dump(value, serialize_method,
-                               ignore_attribute, ignore, config))
-                    for key, value in obj.items())
+        return {key: dump(value, serialize_method, ignore_attribute,
+                          ignore, config)
+                for key, value in obj.items()}
 
     # It's not a standard type, so it needs __jsonclass__
     module_name = inspect.getmodule(type(obj)).__name__
@@ -219,7 +219,7 @@ def load(obj, classes=None):
 
     # Otherwise, it's a dict type
     elif '__jsonclass__' not in obj:
-        return dict((key, load(value)) for key, value in obj.items())
+        return {key: load(value) for key, value in obj.items()}
 
     # It's a dictionary, and it has a __jsonclass__
     orig_module_name = obj['__jsonclass__'][0]

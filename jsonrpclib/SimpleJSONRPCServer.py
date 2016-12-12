@@ -198,8 +198,8 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                     continue
 
                 # Call the method
-                resp_entry = self._marshaled_single_dispatch(req_entry,
-                                                             dispatch_method)
+                resp_entry = self._marshaled_single_dispatch(
+                    req_entry, dispatch_method)
 
                 # Store its result
                 if isinstance(resp_entry, Fault):
@@ -222,8 +222,8 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                 return result.dump()
 
             # Call the method
-            response = self._marshaled_single_dispatch(request,
-                                                       dispatch_method)
+            response = self._marshaled_single_dispatch(
+                request, dispatch_method)
             if isinstance(response, Fault):
                 # pylint: disable=E1103
                 return response.dump()
@@ -291,11 +291,11 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
         if is_notification and self.__notification_pool is not None:
             # Use the thread pool for notifications
             if dispatch_method is not None:
-                self.__notification_pool.enqueue(dispatch_method,
-                                                 method, params)
+                self.__notification_pool.enqueue(
+                    dispatch_method, method, params)
             else:
-                self.__notification_pool.enqueue(self._dispatch,
-                                                 method, params, config)
+                self.__notification_pool.enqueue(
+                    self._dispatch, method, params, config)
 
             # Return immediately
             return None
