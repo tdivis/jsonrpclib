@@ -36,11 +36,19 @@ try:
     # Python 3
     # pylint: disable=F0401,E0611
     import xmlrpc.server as xmlrpcserver
+    # Make sure the module is complete. The "future" package under python2.7 provides an incomplete
+    # variant of this package.
+    SimpleXMLRPCDispatcher = xmlrpcserver.SimpleXMLRPCDispatcher
+    SimpleXMLRPCRequestHandler = xmlrpcserver.SimpleXMLRPCRequestHandler
+    resolve_dotted_attribute = xmlrpcserver.resolve_dotted_attribute
     import socketserver
 except (ImportError, AttributeError):
     # Python 2 or IronPython
     # pylint: disable=F0401,E0611
     import SimpleXMLRPCServer as xmlrpcserver
+    SimpleXMLRPCDispatcher = xmlrpcserver.SimpleXMLRPCDispatcher
+    SimpleXMLRPCRequestHandler = xmlrpcserver.SimpleXMLRPCRequestHandler
+    resolve_dotted_attribute = xmlrpcserver.resolve_dotted_attribute
     import SocketServer as socketserver
 
 try:
@@ -143,7 +151,7 @@ class NoMulticallResult(Exception):
     pass
 
 
-class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
+class SimpleJSONRPCDispatcher(SimpleXMLRPCDispatcher, object):
     """
     Mix-in class that dispatches JSON-RPC requests.
 
@@ -156,7 +164,7 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
         Sets up the dispatcher with the given encoding.
         None values are allowed.
         """
-        xmlrpcserver.SimpleXMLRPCDispatcher.__init__(
+        SimpleXMLRPCDispatcher.__init__(
             self, allow_none=True, encoding=encoding or "UTF-8")
         self.json_config = config
 
@@ -354,7 +362,7 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
                 except AttributeError:
                     # Resolve the method name in the instance
                     try:
-                        func = xmlrpcserver.resolve_dotted_attribute(
+                        func = resolve_dotted_attribute(
                             self.instance, method, True)
                     except AttributeError:
                         # Unknown method
@@ -391,7 +399,7 @@ class SimpleJSONRPCDispatcher(xmlrpcserver.SimpleXMLRPCDispatcher, object):
 # ------------------------------------------------------------------------------
 
 
-class SimpleJSONRPCRequestHandler(xmlrpcserver.SimpleXMLRPCRequestHandler):
+class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     """
     HTTP request handler.
 
