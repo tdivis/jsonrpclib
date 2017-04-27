@@ -1,5 +1,5 @@
-JSONRPClib (patched for Pelix)
-##############################
+JSONRPClib (patched for Pelix and Python 3)
+###########################################
 
 .. image:: https://img.shields.io/pypi/v/jsonrpclib-pelix.svg
     :target: https://pypi.python.org/pypi/jsonrpclib-pelix/
