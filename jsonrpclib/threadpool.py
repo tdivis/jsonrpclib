@@ -4,13 +4,13 @@
 Cached thread pool, inspired from Pelix/iPOPO Thread Pool
 
 :author: Thomas Calmant
-:copyright: Copyright 2016, Thomas Calmant
+:copyright: Copyright 2017, Thomas Calmant
 :license: Apache License 2.0
-:version: 0.2.9
+:version: 0.3.0
 
 ..
 
-    Copyright 2016 Thomas Calmant
+    Copyright 2017 Thomas Calmant
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -40,12 +40,12 @@ except ImportError:
 
 # ------------------------------------------------------------------------------
 
+# Module version
+__version_info__ = (0, 3, 0)
+__version__ = ".".join(str(x) for x in __version_info__)
+
 # Documentation strings format
 __docformat__ = "restructuredtext en"
-
-# Module version
-__version_info__ = (0, 2, 9)
-__version__ = ".".join(str(x) for x in __version_info__)
 
 # ------------------------------------------------------------------------------
 
