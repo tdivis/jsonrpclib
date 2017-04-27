@@ -1022,6 +1022,7 @@ class Payload(object):
 
         :param code: Error code
         :param message: Error message
+        :param data: Extra data to associate to the error
         :return: A JSON-RPC error dictionary
         """
         error = self.response()
