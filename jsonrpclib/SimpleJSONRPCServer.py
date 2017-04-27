@@ -36,7 +36,8 @@ try:
     # Python 3
     # pylint: disable=F0401,E0611
     import xmlrpc.server as xmlrpcserver
-    # Make sure the module is complete. The "future" package under python2.7 provides an incomplete
+    # Make sure the module is complete.
+    # The "future" package under python2.7 provides an incomplete
     # variant of this package.
     SimpleXMLRPCDispatcher = xmlrpcserver.SimpleXMLRPCDispatcher
     SimpleXMLRPCRequestHandler = xmlrpcserver.SimpleXMLRPCRequestHandler
