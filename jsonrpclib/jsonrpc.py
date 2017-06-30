@@ -115,13 +115,13 @@ try:
     _logger.debug("Using cjson as JSON library")
 
     # Declare cjson methods
-    def jdumps(obj, encoding='utf-8'):
-        """
+    def jdumps(obj, encoding='utf-8', config=jsonrpclib.config.DEFAULT):
+        """;
         Serializes ``obj`` to a JSON formatted string, using cjson.
         """
         return cjson.encode(obj)
 
-    def jloads(json_string):
+    def jloads(json_string, config=jsonrpclib.config.DEFAULT):
         """
         Deserializes ``json_string`` (a string containing a JSON document)
         to a Python object, using cjson.
@@ -144,27 +144,27 @@ except ImportError:
 
     # Declare json methods
     if sys.version_info[0] < 3:
-        def jdumps(obj, encoding='utf-8'):
+        def jdumps(obj, encoding='utf-8', config=jsonrpclib.config.DEFAULT):
             """
             Serializes ``obj`` to a JSON formatted string.
             """
             # Python 2 (explicit encoding)
-            return json.dumps(obj, encoding=encoding)
+            return json.dumps(obj, encoding=encoding, cls=config.json_encoder_class)
     else:
         # Python 3
-        def jdumps(obj, encoding='utf-8'):
+        def jdumps(obj, encoding='utf-8', config=jsonrpclib.config.DEFAULT):
             """
             Serializes ``obj`` to a JSON formatted string.
             """
             # Python 3 (the encoding parameter has been removed)
-            return json.dumps(obj)
+            return json.dumps(obj, cls=config.json_encoder_class)
 
-    def jloads(json_string):
+    def jloads(json_string, config=jsonrpclib.config.DEFAULT):
         """
         Deserializes ``json_string`` (a string containing a JSON document)
         to a Python object.
         """
-        return json.loads(json_string)
+        return json.loads(json_string, cls=config.json_decoder_class)
 
 # ------------------------------------------------------------------------------
 # XMLRPClib re-implementations
@@ -1125,7 +1125,7 @@ def dumps(params=None, methodname=None, methodresponse=None,
                    config)
 
     # Returns it as a JSON string
-    return jdumps(request, encoding=encoding or "UTF-8")
+    return jdumps(request, encoding=encoding or "UTF-8", config=config)
 
 
 def load(data, config=jsonrpclib.config.DEFAULT):
@@ -1163,7 +1163,7 @@ def loads(data, config=jsonrpclib.config.DEFAULT):
         return None
 
     # Parse the JSON dictionary
-    result = jloads(data)
+    result = jloads(data, config)
 
     # Load the beans
     return load(result, config)

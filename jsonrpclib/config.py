@@ -65,7 +65,9 @@ class Config(object):
                  user_agent=None, use_jsonclass=True,
                  serialize_method='_serialize',
                  ignore_attribute='_ignore',
-                 serialize_handlers=None):
+                 serialize_handlers=None,
+                 json_encoder_class=None,
+                 json_decoder_class=None):
         """
         Sets up a configuration of JSONRPClib
 
@@ -121,6 +123,9 @@ class Config(object):
         # Functions are expected to have the same parameters as jsonclass dump
         # (possibility to call standard jsonclass dump function within).
         self.serialize_handlers = serialize_handlers or {}
+        # JSON encoder and decoder used in loads and dumps
+        self.json_encoder_class = json_encoder_class
+        self.json_decoder_class = json_decoder_class
 
     def copy(self):
         """
